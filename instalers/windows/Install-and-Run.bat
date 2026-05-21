@@ -1,6 +1,6 @@
 @echo off
 setlocal EnableExtensions
-title Orchomogeneity
+title Textural cardinality
 
 cd /d "%~dp0..\.."
 set "ROOT=%CD%"
@@ -8,8 +8,8 @@ set "PY=%ROOT%\instalers\runtime\windows\python\python.exe"
 set "BOOT=%ROOT%\instalers\common\bootstrap.py"
 
 echo.
-echo  Orchomogeneity Analyser
-echo  =======================
+echo  Textural cardinality
+echo  ====================
 echo.
 
 if not exist "%PY%" (

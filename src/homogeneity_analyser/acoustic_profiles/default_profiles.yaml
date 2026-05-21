@@ -1,3 +1,0 @@
-# Numeric timbral defaults live in ``default_profiles.json`` (stdlib JSON; no PyYAML runtime).
-# Regenerate with: ``python scripts/build_default_timbral_profile_json.py``
-registry_json: default_profiles.json

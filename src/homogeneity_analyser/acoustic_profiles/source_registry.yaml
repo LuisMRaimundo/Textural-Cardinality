@@ -1,4 +1,0 @@
-# Acoustic / psychoacoustic evidence registry (bibliography lives in JSON for stdlib-only loading).
-# This package does not depend on PyYAML at runtime; edit ``source_registry.json`` or run
-# ``python scripts/build_acoustic_source_registry_json.py`` after changing the generator script.
-registry_json: source_registry.json

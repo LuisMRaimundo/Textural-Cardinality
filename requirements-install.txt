@@ -1,3 +1,4 @@
-# End-user install (no dev/test tools). Used by instalers/ scripts.
-# From repository root: pip install -r requirements-install.txt
--e .
+music21>=9.0
+gradio>=4.0
+plotly>=5.0
+

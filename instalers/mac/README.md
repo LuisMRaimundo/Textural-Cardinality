@@ -1,4 +1,4 @@
-# macOS installers — Orchomogeneity
+# macOS installers — Textural cardinality
 
 ## End users
 
@@ -8,7 +8,7 @@
    chmod +x install-easy.sh
    ./install-easy.sh
    ```
-3. Launch **Orchomogeneity** from `~/Desktop/Orchomogeneity.command` or `~/Applications/Orchomogeneity/Launch-Orchomogeneity.command`.
+3. Launch **Textural cardinality** from `~/Desktop/Textural-Cardinality.command` or `~/Applications/TexturalCardinality/Launch-Textural-Cardinality.command`.
 
 First run needs **Internet** and may take **10–25 minutes**.
 

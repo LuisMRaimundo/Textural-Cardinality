@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Bootstrap portable Python + Orchomogeneity dependencies, then launch the Gradio app.
+Bootstrap portable Python + Textural cardinality dependencies, then launch the Gradio app.
 
 Used by instalers/windows, instalers/mac, instalers/linux when running from a clone.
 """
@@ -151,7 +151,7 @@ def ensure_app_installed(py: Path) -> None:
             pass
 
     req = PROJECT_ROOT / "requirements-install.txt"
-    _log("Installing Orchomogeneity and dependencies (first run may take several minutes) …")
+    _log("Installing Textural cardinality dependencies (first run may take several minutes) …")
     _run([str(py), "-m", "pip", "install", "--upgrade", "pip", "wheel", "setuptools"])
     _run([str(py), "-m", "pip", "install", "-r", str(req)])
     RUNTIME_DIR.mkdir(parents=True, exist_ok=True)
@@ -180,13 +180,19 @@ def _pick_free_port(host: str = GRADIO_HOST, start: int = GRADIO_PORT_START) -> 
 
 def launch_gradio(py: Path) -> int:
     env = os.environ.copy()
-    cache = Path(env.get("LOCALAPPDATA", env.get("HOME", "."))) / "Orchomogeneity" / "exports"
-    env.setdefault("HOMOGENEITY_CACHE_DIR", str(cache))
-    Path(env["HOMOGENEITY_CACHE_DIR"]).mkdir(parents=True, exist_ok=True)
+    cache = Path(env.get("LOCALAPPDATA", env.get("HOME", "."))) / "TexturalCardinality" / "exports"
+    env.setdefault("TEXTURAL_CARDINALITY_CACHE_DIR", str(cache))
+    Path(env["TEXTURAL_CARDINALITY_CACHE_DIR"]).mkdir(parents=True, exist_ok=True)
+    src_path = PROJECT_ROOT / "src"
+    env["PYTHONPATH"] = (
+        f"{src_path}{os.pathsep}{env['PYTHONPATH']}"
+        if env.get("PYTHONPATH")
+        else str(src_path)
+    )
 
     port = _pick_free_port()
     url = f"http://{GRADIO_HOST}:{port}/"
-    _log(f"Starting Orchomogeneity — open {url}")
+    _log(f"Starting Textural cardinality — open {url}")
     time.sleep(1.5)
     try:
         webbrowser.open(url)
@@ -194,10 +200,8 @@ def launch_gradio(py: Path) -> int:
         pass
 
     code = (
-        "from homogeneity_analyser.utils.output_paths import cleanup_stale_exports, gradio_launch_kwargs\n"
-        "from homogeneity_analyser.ui.gradio_app import build_demo\n"
-        "cleanup_stale_exports()\n"
-        f"build_demo().launch(**gradio_launch_kwargs(server_name={GRADIO_HOST!r}, server_port={port}, inbrowser=False))\n"
+        "from textural_dimension.ui.gradio_app import build_demo\n"
+        f"build_demo().launch(server_name={GRADIO_HOST!r}, server_port={port}, inbrowser=False)\n"
     )
     return subprocess.call([str(py), "-c", code], cwd=PROJECT_ROOT, env=env)
 
@@ -226,7 +230,7 @@ def cmd_doctor(_: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Orchomogeneity bootstrap")
+    parser = argparse.ArgumentParser(description="Textural cardinality bootstrap")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("setup").set_defaults(func=cmd_setup)
     sub.add_parser("launch").set_defaults(func=cmd_launch)

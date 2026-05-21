@@ -1,13 +1,13 @@
-# Windows installers — Orchomogeneity
+# Windows installers — Textural cardinality
 
 ## End users (recommended)
 
-1. Download this repository (or only the `instalers/windows` folder from [GitHub](https://github.com/LuisMRaimundo/Orchomogeneity_Analyser)).
+1. Download this repository (or only the `instalers/windows` folder from [GitHub](https://github.com/LuisMRaimundo/Textural-Cardinality)).
 2. Double-click **`INSTALL.bat`**.
 3. Wait until the window reports success (first run: **10–25 minutes**).
-4. Start the app from **Desktop** or **Start menu → Orchomogeneity**.
+4. Start the app from **Desktop** or **Start menu → Textural cardinality**.
 
-Install location: `%LOCALAPPDATA%\Programs\Orchomogeneity\`  
+Install location: `%LOCALAPPDATA%\Programs\TexturalCardinality\`  
 Log file: `install.log` in that folder.
 
 ## Already have the full repo cloned?

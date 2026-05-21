@@ -1,22 +1,19 @@
 cff-version: 1.2.0
-title: Orchomogeneity Analyser
+title: Textural cardinality
 message: >-
   If you use this software, please cite it using the metadata below.
 type: software
 authors:
   - family-names: Raimundo
     given-names: Luís
-repository-code: 'https://github.com/LuisMRaimundo/Orchomogeneity_Analyser'
-url: 'https://github.com/LuisMRaimundo/Orchomogeneity_Analyser'
-version: 2.0.0
+repository-code: 'https://github.com/LuisMRaimundo/Interval-Homogeneity-Analyser'
+url: 'https://github.com/LuisMRaimundo/Interval-Homogeneity-Analyser'
+version: 1.0.0
 keywords:
-  - MusicXML
-  - MIDI
-  - orchestration
-  - timbral homogeneity
-  - H_TI
+  - vertical cardinality
   - symbolic music analysis
+  - textural cardinality
 license: Proprietary
 abstract: >-
-  Score-derived symbolic timbral–instrumental homogeneity analyser (H_TI / H_TI_core)
-  for MusicXML, MXL, and MIDI orchestral scores; not audio analysis.
+  Cardinality-only symbolic toolkit with GUI and exports for vertical note count,
+  unique pitch count, and pitch-class cardinality over time in notated scores.

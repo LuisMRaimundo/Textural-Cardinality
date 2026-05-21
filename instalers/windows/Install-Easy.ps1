@@ -16,7 +16,7 @@ $InstallerRoot = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent 
 . (Join-Path $InstallerRoot 'config.ps1')
 . (Join-Path $InstallerRoot 'lib\InstallerHelpers.ps1')
 
-$cfg = $script:OrchomogeneityConfig
+$cfg = $script:TexturalCardinalityConfig
 $InstallRoot = $cfg.InstallRoot
 $AppDir = Join-Path $InstallRoot 'app'
 $VenvDir = Join-Path $InstallRoot 'venv'
@@ -26,7 +26,7 @@ New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
 
 Write-Host ''
 Write-Host '========================================' -ForegroundColor Cyan
-Write-Host ' Orchomogeneity — Installer' -ForegroundColor Cyan
+Write-Host ' Textural cardinality — Installer' -ForegroundColor Cyan
 Write-Host ' ' $cfg.GitHubRepoUrl -ForegroundColor Cyan
 Write-Host '========================================' -ForegroundColor Cyan
 Write-Host ''
@@ -57,7 +57,7 @@ Then tick 'Add python.exe to PATH'.
     Register-Shortcuts -InstallRoot $InstallRoot -AppDir $AppDir -VenvDir $VenvDir
 
     @"
-Orchomogeneity standard install
+Textural cardinality standard install
 Installed: $(Get-Date -Format o)
 Python: $pythonExe
 Repo: $($cfg.GitHubRepoUrl)
@@ -66,13 +66,13 @@ Repo: $($cfg.GitHubRepoUrl)
     Write-Host ''
     Write-Host 'SUCCESS — Installation complete.' -ForegroundColor Green
     Write-Host " Location: $InstallRoot"
-    Write-Host ' Start: Desktop or Start menu → Orchomogeneity'
+    Write-Host ' Start: Desktop or Start menu → Textural cardinality'
     Write-Host ''
 
     if (-not $NoLaunch) {
-        $launch = Join-Path $InstallRoot 'Launch-Orchomogeneity.bat'
+        $launch = Join-Path $InstallRoot 'Launch-Textural-Cardinality.bat'
         if (Test-Path $launch) {
-            Write-InstallLog 'Launching Orchomogeneity…'
+            Write-InstallLog 'Launching Textural cardinality…'
             Start-Process -FilePath $launch
         }
     }

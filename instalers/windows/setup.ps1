@@ -9,7 +9,7 @@ if (Test-Path $PyExe) { exit 0 }
 $Version = '3.11.9'
 $ZipUrl = "https://www.python.org/ftp/python/$Version/python-$Version-embed-amd64.zip"
 $GetPipUrl = 'https://bootstrap.pypa.io/get-pip.py'
-$Temp = Join-Path $env:TEMP 'orchomogeneity-python-setup'
+$Temp = Join-Path $env:TEMP 'textural-cardinality-python-setup'
 New-Item -ItemType Directory -Force -Path $Temp | Out-Null
 $ZipPath = Join-Path $Temp 'python-embed.zip'
 

@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# One-click setup for macOS (non-expert). Repo: https://github.com/LuisMRaimundo/Orchomogeneity_Analyser
+# One-click setup for macOS (non-expert). Repo: https://github.com/LuisMRaimundo/Textural-Cardinality
 set -euo pipefail
 
-INSTALL_ROOT="${HOME}/Applications/Orchomogeneity"
+INSTALL_ROOT="${HOME}/Applications/TexturalCardinality"
 APP_DIR="${INSTALL_ROOT}/app"
 VENV_DIR="${INSTALL_ROOT}/venv"
-GITHUB_ZIP="https://github.com/LuisMRaimundo/Orchomogeneity_Analyser/archive/refs/heads/main.zip"
-ZIP_FOLDER="Orchomogeneity_Analyser-main"
+GITHUB_ZIP="https://github.com/LuisMRaimundo/Textural-Cardinality/archive/refs/heads/main.zip"
+ZIP_FOLDER="Textural-Cardinality-main"
 
-echo "=== Orchomogeneity — Installer (macOS) ==="
+echo "=== Textural cardinality — Installer (macOS) ==="
 
 find_python() {
   for c in python3.11 python3.10 python3; do
@@ -51,17 +51,18 @@ echo "Installing Python packages (10–25 min first time)…"
 "${VENV_DIR}/bin/pip" install --upgrade pip wheel
 "${VENV_DIR}/bin/pip" install -r "${APP_DIR}/requirements-install.txt"
 
-LAUNCHER="${INSTALL_ROOT}/Launch-Orchomogeneity.command"
+LAUNCHER="${INSTALL_ROOT}/Launch-Textural-Cardinality.command"
 cat > "${LAUNCHER}" <<EOF
 #!/usr/bin/env bash
 cd "${APP_DIR}"
-exec "${VENV_DIR}/bin/homogeneity-analyser"
+export PYTHONPATH="${APP_DIR}/src:\${PYTHONPATH:-}"
+exec "${VENV_DIR}/bin/python" -m textural_dimension
 EOF
 chmod +x "${LAUNCHER}"
 
-DESKTOP="${HOME}/Desktop/Orchomogeneity.command"
+DESKTOP="${HOME}/Desktop/Textural-Cardinality.command"
 cp "${LAUNCHER}" "${DESKTOP}"
 chmod +x "${DESKTOP}"
 
 echo "Done. Open: ${LAUNCHER}"
-echo "Or: Desktop → Orchomogeneity.command"
+echo "Or: Desktop → Textural-Cardinality.command"

@@ -1,4 +1,4 @@
-# Editable install with dev dependencies (tests, ruff, mypy, coverage).
-# From repo root:
-#   pip install -r requirements.txt
--e ".[dev]"
+music21>=9.0
+gradio>=4.0
+plotly>=5.0
+

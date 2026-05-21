@@ -3,127 +3,33 @@ requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "homogeneity-analyser"
-version = "2.0.0"
-description = "Orchomogeneity — H-TI score-derived symbolic timbral–instrumental homogeneity analyser (MusicXML/MXL/MIDI; not audio analysis)."
-keywords = [
-    "musicology",
-    "orchestration",
-    "symbolic music analysis",
-    "MusicXML",
-    "MIDI",
-    "timbral homogeneity",
-    "instrumentation",
-    "dynamics",
-    "H_TI",
-]
+name = "textural-dimension"
+version = "1.0.0"
+description = "Textural cardinality toolkit for symbolic vertical-cardinality analysis."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Proprietary / project-local — see repository" }
 authors = [{ name = "Luís Raimundo" }]
 dependencies = [
-    "numpy>=1.21",
-    "pandas>=2.0",
-    "scipy>=1.7",
     "music21>=9.0",
-    "matplotlib>=3.5",
-    # Plotly 5.2x + Kaleido 1.2 is incompatible for write_image(); keep a supported pair.
-    "plotly>=6.1.1,<7",
-    "kaleido>=1.0.0,<2",
     "gradio>=4.0",
+    "plotly>=5.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
-    "pytest-cov>=4.0",
-    "ruff>=0.4",
-    "mypy>=1.8",
 ]
 
 [project.scripts]
-homogeneity-analyser = "homogeneity_analyser.ui.gradio_app:main"
+textural-dimension = "textural_dimension.__main__:main"
 
 [tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.setuptools.package-data]
-"homogeneity_analyser.acoustic_profiles" = ["*.json", "*.yaml"]
-"homogeneity_analyser.taxonomy" = ["*.json"]
+where = ["src", "."]
+include = ["textural_dimension*", "iav"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = "-v --tb=short"
-markers = [
-    "legacy: multimetric / H_timbral metric / combined JSON 1.8 — not the H_TI Gradio product path",
-]
-
-[tool.coverage.run]
-branch = true
-source = ["homogeneity_analyser"]
-omit = [
-    "*/tests/*",
-    "homogeneity_analyser/legacy/*",
-]
-
-[tool.coverage.report]
-# Product-path gate (~77–79% measured; legacy omitted). H_TI UI logic: ui/hti_ui_params.py (tested); callbacks.py is Gradio glue.
-fail_under = 77
-show_missing = true
-
-[tool.ruff]
-target-version = "py310"
-line-length = 120
-src = ["src", "tests", "validation"]
-extend-exclude = ["build", "dist"]
-
-[tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
-ignore = ["RUF001", "RUF002", "RUF003"]
-
-[tool.ruff.lint.per-file-ignores]
-"validation/*" = ["E402"]
-"src/homogeneity_analyser/ui/callbacks.py" = ["B008", "E731"]
-"src/homogeneity_analyser/ui/gradio_app.py" = ["E501"]
-"scripts/*" = ["E501"]
-"packaging/*" = ["E501", "I001"]
-"tools/*" = ["E501"]
-"src/homogeneity_analyser/taxonomy/instrument_taxonomy.py" = ["E501"]
-"src/homogeneity_analyser/analyzers/timbral_acoustic_proxy.py" = ["E501", "SIM102"]
-"src/homogeneity_analyser/analyzers/hti.py" = ["E501", "SIM114"]
-"src/homogeneity_analyser/analyzers/symbolic_blend_layers.py" = ["RUF046"]
-
-[tool.ruff.format]
-quote-style = "double"
-
-[tool.mypy]
-python_version = "3.10"
-mypy_path = "src"
-namespace_packages = true
-explicit_package_bases = true
-warn_unused_ignores = true
-warn_return_any = false
-strict_optional = true
-ignore_missing_imports = false
-
-[[tool.mypy.overrides]]
-module = [
-    "music21.*",
-    "gradio.*",
-    "plotly.*",
-    "scipy.*",
-    "matplotlib.*",
-    "matplotlib",
-    "PIL.*",
-]
-ignore_missing_imports = true
-
-# Work around mypy 1.17 internal crash on numpy.histogram2d inference in HomogeneityAnalyzer.extract_features.
-[[tool.mypy.overrides]]
-module = [
-    "homogeneity_analyser.legacy.homogeneity",
-    "homogeneity_analyser.analyzers.homogeneity",
-]
-ignore_errors = true
 

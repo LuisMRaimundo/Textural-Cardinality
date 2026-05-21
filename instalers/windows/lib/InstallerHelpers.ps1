@@ -1,4 +1,4 @@
-# Shared helpers for Orchomogeneity Windows one-click install
+# Shared helpers for Textural cardinality Windows one-click install
 
 function Write-InstallLog {
     param([string]$Message, [string]$Level = 'INFO')
@@ -26,8 +26,8 @@ function Find-ExistingPython {
         if (-not $cmd) { continue }
         try {
             $minor = & $cmd.Source -c 'import sys; print(sys.version_info.minor)' 2>$null
-            if ([int]$minor -ge $script:OrchomogeneityConfig.PythonMinMinor -and
-                [int]$minor -le $script:OrchomogeneityConfig.PythonMaxMinor) {
+            if ([int]$minor -ge $script:TexturalCardinalityConfig.PythonMinMinor -and
+                [int]$minor -le $script:TexturalCardinalityConfig.PythonMaxMinor) {
                 return $cmd.Source
             }
         } catch { }
@@ -36,7 +36,7 @@ function Find-ExistingPython {
 }
 
 function Install-Python311 {
-    $cfg = $script:OrchomogeneityConfig
+    $cfg = $script:TexturalCardinalityConfig
     $installer = Join-Path $env:TEMP "python-$($cfg.PythonVersion)-amd64.exe"
     Write-InstallLog "Downloading Python $($cfg.PythonVersion) …"
     Invoke-WebRequest -Uri $cfg.PythonInstallerUrl -OutFile $installer -UseBasicParsing
@@ -56,7 +56,7 @@ function Initialize-AppSource {
         [string]$DestAppDir,
         [switch]$ForceRefresh
     )
-    $cfg = $script:OrchomogeneityConfig
+    $cfg = $script:TexturalCardinalityConfig
     $marker = Join-Path $DestAppDir 'pyproject.toml'
     if ((Test-Path $marker) -and -not $ForceRefresh) {
         Write-InstallLog "Application source already present: $DestAppDir"
@@ -65,7 +65,7 @@ function Initialize-AppSource {
     if (Test-Path $DestAppDir) {
         Remove-Item -LiteralPath $DestAppDir -Recurse -Force
     }
-    $tmp = Join-Path $env:TEMP ("orchomogeneity-src-" + [guid]::NewGuid().ToString('N'))
+    $tmp = Join-Path $env:TEMP ("textural-cardinality-src-" + [guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Force -Path $tmp | Out-Null
     $zipPath = Join-Path $tmp 'repo.zip'
     Write-InstallLog "Downloading from $($cfg.GitHubRepoUrl) …"
@@ -114,14 +114,15 @@ function Register-Shortcuts {
         [string]$AppDir,
         [string]$VenvDir
     )
-    $cfg = $script:OrchomogeneityConfig
-    $launchBat = Join-Path $InstallRoot 'Launch-Orchomogeneity.bat'
-    $exe = Join-Path $VenvDir 'Scripts\homogeneity-analyser.exe'
+    $cfg = $script:TexturalCardinalityConfig
+    $launchBat = Join-Path $InstallRoot 'Launch-Textural-Cardinality.bat'
+    $venvPy = Join-Path $VenvDir 'Scripts\python.exe'
     @"
 @echo off
 title $($cfg.AppName)
 cd /d "$AppDir"
-"$exe"
+set "PYTHONPATH=$AppDir\src;%PYTHONPATH%"
+"$venvPy" -m textural_dimension
 if errorlevel 1 pause
 "@ | Set-Content -LiteralPath $launchBat -Encoding ASCII
 
@@ -135,7 +136,7 @@ if errorlevel 1 pause
         $sc = $wsh.CreateShortcut($lnk)
         $sc.TargetPath = $launchBat
         $sc.WorkingDirectory = $InstallRoot
-        $sc.Description = 'Orchomogeneity H-TI analyser (Gradio)'
+        $sc.Description = 'Textural cardinality vertical-cardinality analyser (Gradio)'
         $sc.Save()
     }
     Write-InstallLog "Shortcuts created (Desktop and Start menu)"

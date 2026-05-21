@@ -7,7 +7,7 @@ __pycache__/
 # Generated package / install metadata (never edit; never treat as authoritative)
 *.egg-info/
 .eggs/
-**/homogeneity_analyser.egg-info/
+**/textural_dimension.egg-info/
 # MkDocs static site output (local docs server / build)
 site/
 
@@ -25,9 +25,9 @@ coverage.xml
 # Gradio local uploads / exports
 .gradio/
 
-# Windows distribution binaries (README in Homogeneity_analiser_install stays committed)
-Homogeneity_analiser_install/HomogeneityAnalyserSetup.exe
-Homogeneity_analiser_install/portable/
+# Windows distribution binaries
+Textural_dimension_install/*.exe
+Textural_dimension_install/portable/
 
 # Optional: local env
 .env

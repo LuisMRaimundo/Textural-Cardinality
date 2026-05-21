@@ -1,12 +1,12 @@
 @echo off
-title Orchomogeneity - Installer
+title Textural cardinality - Installer
 cd /d "%~dp0"
 
 echo.
-echo Orchomogeneity - automatic setup
+echo Textural cardinality - automatic setup
 echo (Python + libraries + shortcuts)
 echo.
-echo GitHub: https://github.com/LuisMRaimundo/Orchomogeneity_Analyser
+echo GitHub: https://github.com/LuisMRaimundo/Textural-Cardinality
 echo.
 echo Do not close this window until finished.
 echo.
@@ -17,7 +17,7 @@ set ERR=%ERRORLEVEL%
 echo.
 if %ERR% NEQ 0 (
   echo Installation failed. See install.log in:
-  echo %LOCALAPPDATA%\Programs\Orchomogeneity\
+  echo %LOCALAPPDATA%\Programs\TexturalCardinality\
 ) else (
   echo Done.
 )
