@@ -60,7 +60,8 @@ Third-party components
 Runtime dependencies (e.g. Python packages listed in pyproject.toml) are subject to their respective licences. This notice governs the Orchomogeneity application source and branding only.
 
 ## Contact
-For licensing enquiries, cite the repository maintainer listed in CITATION.cff
+For licensing enquiries, cite the repository maintainer listed in CITATION.cff 
+email:lmr.2020@outlook.pt
  
 ## Aknowledgments
 
