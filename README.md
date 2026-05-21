@@ -47,7 +47,7 @@ python -m textural_dimension --notes 4 --unique-pitches 3 --pc-cardinality 2
 - Technical manual (formulas, algorithms, calculations, tutorial):
   - `TECHNICAL_MANUAL.md`
  
-##Acknowledgements
+## Aknowledgments
 
 This project was developed by Luís Raimundo with the support and funding of the Fundação para a Ciência e a Tecnologia (FCT) and Universidade NOVA de Lisboa.
 
