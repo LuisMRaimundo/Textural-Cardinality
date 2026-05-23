@@ -6,6 +6,7 @@ from collections import Counter
 import csv
 import json
 import math
+from pathlib import Path
 import tempfile
 from typing import Any
 
@@ -317,6 +318,7 @@ def analyze_vertical_cardinality(
     bin_cents: float = DEFAULT_BIN_CENTS,
     auto_detect_tuning: bool = False,
     tuning_preset: str | None = None,
+    debug_export_internal_path: bool = False,
 ) -> dict[str, Any]:
     edo = validate_edo(edo)
     bin_cents = validate_bin_cents(bin_cents)
@@ -386,8 +388,8 @@ def analyze_vertical_cardinality(
 
     times = _time_axis(end_time, time_step)
     series = _build_cardinality_series(times, events)
-    return {
-        "source_file": str(score_path),
+    result: dict[str, Any] = {
+        "source_file_name": Path(str(score_path)).name,
         "time_step": float(time_step),
         "duration_quarters": float(end_time),
         "event_count": len(events),
@@ -408,6 +410,9 @@ def analyze_vertical_cardinality(
         },
         "series": series,
     }
+    if debug_export_internal_path:
+        result["source_file_internal_path"] = str(score_path)
+    return result
 
 
 def write_cardinality_csv(analysis: dict[str, Any]) -> str:
