@@ -13,7 +13,14 @@ from typing import Any
 NoteTuple = tuple[str, float, int]
 
 VERTICAL_CARDINALITY_SCHEMA_VERSION = "1.0"
-SUPPORTED_EDOS = {12, 24, 48}
+TUNING_PRESETS = {
+    "12_edo": {"bin_cents": 100.0, "edo": 12},
+    "24_edo": {"bin_cents": 50.0, "edo": 24},
+    "48_edo": {"bin_cents": 25.0, "edo": 48},
+    "31_edo": {"bin_cents": 38.70967741935484, "edo": 31},
+    "19_edo": {"bin_cents": 63.15789473684211, "edo": 19},
+    "53_edo": {"bin_cents": 22.641509433962263, "edo": 53},
+}
 _STEP_TO_SEMITONE = {
     "C": 0.0,
     "D": 2.0,
@@ -27,8 +34,8 @@ _STEP_TO_SEMITONE = {
 
 def validate_edo(edo: int) -> int:
     edo = int(edo)
-    if edo not in SUPPORTED_EDOS:
-        raise ValueError("edo must be one of: 12, 24, 48")
+    if edo <= 0:
+        raise ValueError("edo must be a positive integer")
     return edo
 
 
@@ -49,10 +56,7 @@ def _pitch_unit(note: NoteTuple, *, bin_cents: int) -> int:
 def _pc_class(note: NoteTuple, *, edo: int = 12) -> int:
     edo = validate_edo(edo)
     ps = _midi_from_note_tuple(note)
-    if edo == 12:
-        return int(round(ps)) % 12
-    step = (ps % 12.0) * edo / 12.0
-    return _nearest_int(step) % edo
+    return int(round(ps * float(edo) / 12.0)) % edo
 
 
 def vertical_cardinality_for_notes(

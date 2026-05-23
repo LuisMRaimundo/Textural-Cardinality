@@ -19,9 +19,7 @@ Cardinality-only symbolic toolkit with a graphical interface for score upload, a
 
 ## Scope and limitations
 
-`vertical_pitch_class_cardinality` supports 12-, 24-, and 48-EDO. The default is 12-EDO. The metric is an equal-tempered symbolic pitch-class cardinality, not an acoustic, just-intonation, spectral, or continuous-frequency model.
-
-For microtonal repertoire, select 24-EDO or 48-EDO only when the symbolic score encoding preserves the relevant microtonal accidentals or pitch-space values and when an equal-tempered reduction is analytically appropriate.
+The implementation supports configurable equal-division-of-octave (EDO) grids via the `bin_cents` and `edo` parameters (default: `bin_cents=100`, `edo=12`, i.e. semitones). Quartertone (24-EDO, `bin_cents=50`) and eighth-tone (48-EDO, `bin_cents=25`) presets are provided; arbitrary EDOs are accepted. Non-EDO tunings (just intonation, Partch's 43-tone scale, custom continua) are not natively supported; pitches that cannot be quantised to the active grid are reported in the `warnings` array of the JSON export and are quantised to the nearest grid point.
 
 ## Installation
 

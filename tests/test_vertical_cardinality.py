@@ -54,7 +54,7 @@ def test_12_edo_default_preserves_chromatic_pitch_class_cardinality() -> None:
 
 def test_invalid_edo_raises() -> None:
     with pytest.raises(ValueError):
-        vertical_cardinality_for_notes([("C", 0.0, 4)], edo=19)
+        vertical_cardinality_for_notes([("C", 0.0, 4)], edo=0)
 
 
 def test_24_edo_c_and_c_sharp_are_two_steps_apart() -> None:
