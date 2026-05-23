@@ -3,7 +3,7 @@
 ## End users
 
 ```bash
-cd instalers/linux
+cd installers/linux
 chmod +x install-easy.sh
 ./install-easy.sh
 ```

@@ -16,6 +16,23 @@ Cardinality-only symbolic toolkit with a graphical interface for score upload, a
 - Download analysis as `CSV` and `JSON`.
 - Use direct cardinality wrappers for script workflows.
 
+## Scope and limitations
+
+This repository implements one component of a multi-instrument suite
+for the quantitative analysis of musical texture. It addresses
+**pitch cardinality only** — the count of notated pitches active at
+each time instant, at three resolution levels (raw note events,
+distinct chromatic pitches, distinct pitch classes). Other dimensions
+of texture — voice independence, onset patterning, register
+distribution, stratification, timbral differentiation — are not
+measured here and are addressed by sister tools.
+
+The current implementation operates in 12-EDO. Microtonal repertoire
+is quantised to the nearest semitone; quartertone, just-intonation,
+and spectral works are therefore reduced to their nearest chromatic
+approximation. Extensions to richer pitch grids are deferred to
+future work.
+
 ## Installation
 
 ```bash
@@ -57,13 +74,13 @@ This software and its documentation are proprietary. No open-source licence is g
 Academic and research use may be permitted under separate agreement or institutional policy; when in doubt, contact the author before redistribution or derivative distribution.
 
 Third-party components
-Runtime dependencies (e.g. Python packages listed in pyproject.toml) are subject to their respective licences. This notice governs the Orchomogeneity application source and branding only.
+Runtime dependencies (e.g. Python packages listed in pyproject.toml) are subject to their respective licences. This notice governs the Textural-Cardinality application source and branding only.
 
 ## Contact
 For licensing enquiries, cite the repository maintainer listed in CITATION.cff 
 email:lmr.2020@outlook.pt
  
-## Aknowledgments
+## Acknowledgements
 
 This project was developed by Luís Raimundo with the support and funding of the Fundação para a Ciência e a Tecnologia (FCT) and Universidade NOVA de Lisboa.
 

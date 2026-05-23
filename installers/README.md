@@ -29,9 +29,9 @@ Folders `runtime/`, `build/`, `dist/`, `output/`, and compiled `.exe` / `.zip` /
 
 | Folder | Standard install | Portable build (PyInstaller) |
 |--------|------------------|--------------------------------|
-| `instalers/windows/` | `INSTALL.bat` | `Build-All.ps1` |
-| `instalers/mac/` | `install-easy.sh` | `build-all.sh` |
-| `instalers/linux/` | `install-easy.sh` | `build-all.sh` |
+| `installers/windows/` | `INSTALL.bat` | `Build-All.ps1` |
+| `installers/mac/` | `install-easy.sh` | `build-all.sh` |
+| `installers/linux/` | `install-easy.sh` | `build-all.sh` |
 
 These build scripts wrap `packaging/windows/` (maintainers). End users should prefer **`INSTALL.bat`** / **`install-easy.sh`**.
 
@@ -40,9 +40,9 @@ These build scripts wrap `packaging/windows/` (maintainers). End users should pr
 If you already have the repo on disk, you can use the portable bootstrap (no GitHub download):
 
 ```text
-instalers/windows/Install-and-Run.bat   (Windows)
-instalers/mac/install-and-run.sh        (macOS)
-instalers/linux/install-and-run.sh      (Linux)
+installers/windows/Install-and-Run.bat   (Windows)
+installers/mac/install-and-run.sh        (macOS)
+installers/linux/install-and-run.sh      (Linux)
 ```
 
-That uses `instalers/common/bootstrap.py` to download a portable Python under `instalers/runtime/` and install the app in place.
+That uses `installers/common/bootstrap.py` to download a portable Python under `installers/runtime/` and install the app in place.
