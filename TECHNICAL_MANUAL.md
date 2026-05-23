@@ -18,34 +18,40 @@ The three exported metrics are:
 
 - `vertical_note_count(t) = |S(t)|`
 - `vertical_unique_pitch_count(t) = |U(t)|`, where `U(t)` is the set of quantized pitch units.
-- `vertical_pitch_class_cardinality(t) = |PC(t)|`, where `PC(t)` is the set of pitch classes mod 12.
+- `vertical_pitch_class_cardinality(t) = |PC_edo(t)|`, where `PC_edo(t)` is the set of pitch classes in the selected equal-tempered universe (`edo ∈ {12, 24, 48}`).
 
 ## 2) Pitch conversion formulas
 
 Implemented in `iav/vertical_cardinality.py` and mirrored in the analysis engine.
 
-### 2.1 MIDI pitch value
+### 2.1 Pitch-space value
 
-For each `NoteTuple n`, the code builds a `music21.pitch.Pitch` and reads `ps`:
+For each `NoteTuple n = (step, alter, octave)`, the code computes pitch-space directly:
 
-- `midi_ps(n) = Pitch(step, alter, octave).ps`
+- `ps(n) = 12*(octave + 1) + step_to_semitone(step) + alter`
 
-This supports accidentals and enharmonic spellings through `music21`.
+where `step_to_semitone = {C:0, D:2, E:4, F:5, G:7, A:9, B:11}`.
 
 ### 2.2 Pitch unit quantization
 
 With `bin_cents = 100` (default), the pitch unit is:
 
-- `cents(n) = 100 * midi_ps(n)`
+- `cents(n) = 100 * ps(n)`
 - `unit(n) = round(cents(n) / bin_cents)`
 
 For `bin_cents = 100`, this is equivalent to semitone-quantized MIDI bins.
 
-### 2.3 Pitch class
+### 2.3 Pitch class (EDO-parameterized)
 
-- `pc(n) = round(midi_ps(n)) mod 12`
+- `pc_edo(n) = round_to_nearest_edo_step((ps(n) mod 12) * edo / 12) mod edo`
+- with `edo ∈ {12, 24, 48}`
 
-The current analysis uses `edo=12`, so pitch-class cardinality is always defined.
+Implementation details:
+
+- For `edo = 12`, the implementation preserves previous chromatic behavior:
+  - `pc_12(n) = round(ps(n)) mod 12`
+- For `edo = 24`, one pitch-class step = 50 cents.
+- For `edo = 48`, one pitch-class step = 25 cents.
 
 ## 3) Event extraction from scores
 
@@ -61,9 +67,9 @@ Given a score parsed by `music21.converter.parse`:
 4. Define active interval:
    - `[offset, end)` where `end = offset + max(0, dur)`
 5. Expand chords to multiple note tuples.
-6. Precompute per-event lists:
+6. Validate `edo ∈ {12, 24, 48}` and precompute per-event lists:
    - `units = [unit(n)]`
-   - `pcs = [pc(n)]`
+   - `pcs = [pc_edo(n)]`
 
 Important correctness point: global offset conversion prevents measure/voice-local misalignment.
 
@@ -148,6 +154,9 @@ The analysis return object contains:
 - `time_step`
 - `duration_quarters`
 - `event_count`
+- `edo`
+- `pitch_class_universe` (e.g., `Z12`, `Z24`, `Z48`)
+- `bin_cents`
 - `series[]` with rows:
   - `time_quarters`
   - `vertical_note_count`
@@ -155,6 +164,7 @@ The analysis return object contains:
   - `vertical_pitch_class_cardinality`
 
 The UI can export this as JSON and CSV.
+CSV field names are unchanged; `vertical_pitch_class_cardinality` is interpreted using metadata (`edo`, `pitch_class_universe`).
 
 ## 8) Brief tutorial
 
@@ -168,16 +178,17 @@ The UI can export this as JSON and CSV.
 4. Choose display mode:
    - `Raw Counts` for absolute values
    - `Normalized (0-1)` for comparative shape
-5. (Optional) keep secondary axis enabled for pitch-class visibility.
-6. Click **Run analysis**.
-7. Download `CSV`/`JSON` for thesis plots or downstream statistics.
+5. Select the pitch-class universe (`12`, `24`, or `48` EDO).
+6. (Optional) keep secondary axis enabled for pitch-class visibility.
+7. Click **Run analysis**.
+8. Download `CSV`/`JSON` for thesis plots or downstream statistics.
 
 ### 8.2 CLI quick tutorial
 
 Use the direct row/tuple cardinality mode:
 
 ```bash
-python -m textural_dimension --notes 4 --unique-pitches 3 --pc-cardinality 2
+python -m textural_dimension --notes 4 --unique-pitches 3 --pc-cardinality 2 --edo 24
 ```
 
 Output:

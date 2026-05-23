@@ -7,22 +7,38 @@ Counts notated pitch events / pitch units / pitch classes per vertical slice or 
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+import math
 from typing import Any
-
-from music21.pitch import Accidental, Pitch
 
 NoteTuple = tuple[str, float, int]
 
 VERTICAL_CARDINALITY_SCHEMA_VERSION = "1.0"
+SUPPORTED_EDOS = {12, 24, 48}
+_STEP_TO_SEMITONE = {
+    "C": 0.0,
+    "D": 2.0,
+    "E": 4.0,
+    "F": 5.0,
+    "G": 7.0,
+    "A": 9.0,
+    "B": 11.0,
+}
+
+
+def validate_edo(edo: int) -> int:
+    edo = int(edo)
+    if edo not in SUPPORTED_EDOS:
+        raise ValueError("edo must be one of: 12, 24, 48")
+    return edo
+
+
+def _nearest_int(x: float) -> int:
+    return int(math.floor(float(x) + 0.5 + 1e-9))
 
 
 def _midi_from_note_tuple(note: NoteTuple) -> float:
     step, alter, octave = note[0], float(note[1]), int(note[2])
-    p = Pitch(step)
-    p.octave = octave
-    if alter:
-        p.accidental = Accidental(alter)
-    return float(p.ps)
+    return 12.0 * (octave + 1) + _STEP_TO_SEMITONE[str(step).upper()] + alter
 
 
 def _pitch_unit(note: NoteTuple, *, bin_cents: int) -> int:
@@ -30,39 +46,44 @@ def _pitch_unit(note: NoteTuple, *, bin_cents: int) -> int:
     return int(round(cents / float(bin_cents)))
 
 
+def _pc_class(note: NoteTuple, *, edo: int = 12) -> int:
+    edo = validate_edo(edo)
+    ps = _midi_from_note_tuple(note)
+    if edo == 12:
+        return int(round(ps)) % 12
+    step = (ps % 12.0) * edo / 12.0
+    return _nearest_int(step) % edo
+
+
 def vertical_cardinality_for_notes(
     notes: Sequence[NoteTuple],
     *,
-    bin_cents: int,
-    edo: int,
+    bin_cents: int = 100,
+    edo: int = 12,
 ) -> dict[str, int | None]:
     """Cardinality metrics for one vertical slice (after caller-applied dedupe)."""
+    edo = validate_edo(edo)
     n_events = len(notes)
     if n_events == 0:
         return {
             "vertical_note_count": 0,
             "vertical_unique_pitch_count": 0,
-            "vertical_pitch_class_cardinality": 0 if edo == 12 else None,
+            "vertical_pitch_class_cardinality": 0,
         }
     units = {_pitch_unit(n, bin_cents=bin_cents) for n in notes}
-    unique_pitch = len(units)
-    if edo == 12:
-        pcs = {int(round(_midi_from_note_tuple(n))) % 12 for n in notes}
-        pc_card: int | None = len(pcs)
-    else:
-        pc_card = None
+    pcs = {_pc_class(n, edo=edo) for n in notes}
     return {
         "vertical_note_count": n_events,
-        "vertical_unique_pitch_count": unique_pitch,
-        "vertical_pitch_class_cardinality": pc_card,
+        "vertical_unique_pitch_count": len(units),
+        "vertical_pitch_class_cardinality": len(pcs),
     }
 
 
 def vertical_cardinality_from_summary_row(
     row: Mapping[str, Any],
     *,
-    bin_cents: int,
-    edo: int,
+    bin_cents: int = 100,
+    edo: int = 12,
 ) -> dict[str, int | None]:
     """
     Recover cardinality from a slice-summary row.
@@ -70,7 +91,8 @@ def vertical_cardinality_from_summary_row(
     ``vertical_pitch_class_cardinality`` is taken only from an explicit ``PC cardinality``
     column; it is never inferred from unique pitch count (octave duplicates break that identity).
     """
-    del bin_cents, edo
+    del bin_cents
+    validate_edo(edo)
 
     notes_raw = row.get("Notes")
     if notes_raw is None or notes_raw == "":

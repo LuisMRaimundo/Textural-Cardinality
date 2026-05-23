@@ -35,6 +35,7 @@ def _normalize(values: list[float]) -> list[float]:
 
 
 def _build_plot(analysis: dict[str, Any], *, view_mode: str, pc_secondary_axis: bool):
+    edo = int(analysis.get("edo", 12))
     times = [float(r["time_quarters"]) for r in analysis["series"]]
     vnc = [float(r["vertical_note_count"] or 0) for r in analysis["series"]]
     vup = [float(r["vertical_unique_pitch_count"] or 0) for r in analysis["series"]]
@@ -46,12 +47,13 @@ def _build_plot(analysis: dict[str, Any], *, view_mode: str, pc_secondary_axis: 
     ]
     is_normalized = view_mode == "Normalized (0-1)"
     y1_title = "Normalized Cardinality (0-1)" if is_normalized else "Cardinality"
-    y2_title = "PC Cardinality" if not is_normalized else "Normalized PC (0-1)"
+    y2_title = f"PC Cardinality ({edo}-EDO)" if not is_normalized else f"Normalized PC ({edo}-EDO, 0-1)"
+    pc_label = f"Pitch-Class Cardinality ({edo}-EDO)"
 
     if is_normalized:
         vnc_plot = _normalize(vnc)
         vup_plot = _normalize(vup)
-        vpc_plot = _normalize(vpc_raw)
+        vpc_plot = [v / float(edo) if edo > 0 else 0.0 for v in vpc_raw]
     else:
         vnc_plot = vnc
         vup_plot = vup
@@ -87,10 +89,10 @@ def _build_plot(analysis: dict[str, Any], *, view_mode: str, pc_secondary_axis: 
             x=times,
             y=vpc_plot,
             mode="lines+markers",
-            name="Pitch-Class Cardinality",
+            name=pc_label,
             line={"color": "#EE5253", "width": 2.5, "dash": "dot"},
             marker={"size": 5},
-            hovertemplate="Time: %{x:.3f}<br>PC Cardinality: %{y}<extra></extra>",
+            hovertemplate=f"Time: %{{x:.3f}}<br>PC Cardinality ({edo}-EDO): %{{y}}<extra></extra>",
             yaxis="y2" if pc_secondary_axis else "y",
         )
     )
@@ -139,12 +141,18 @@ def _build_plot(analysis: dict[str, Any], *, view_mode: str, pc_secondary_axis: 
     return fig
 
 
-def run_cardinality_app(file_obj: Any, time_step: float, view_mode: str, pc_secondary_axis: bool):
+def run_cardinality_app(
+    file_obj: Any,
+    time_step: float,
+    edo: int,
+    view_mode: str,
+    pc_secondary_axis: bool,
+):
     score_path = _extract_path(file_obj)
     ts = float(time_step) if time_step is not None else 0.25
     if ts <= 0:
         raise gr.Error("Time step must be > 0.")
-    analysis = analyze_vertical_cardinality(score_path, time_step=ts)
+    analysis = analyze_vertical_cardinality(score_path, time_step=ts, edo=int(edo))
     fig = _build_plot(analysis, view_mode=view_mode, pc_secondary_axis=bool(pc_secondary_axis))
     csv_path = write_cardinality_csv(analysis)
     json_path = write_cardinality_json(analysis)
@@ -155,6 +163,8 @@ def run_cardinality_app(file_obj: Any, time_step: float, view_mode: str, pc_seco
         f"File: {analysis['source_file']}\n"
         f"Duration (quarters): {analysis['duration_quarters']:.3f}\n"
         f"Time step: {analysis['time_step']}\n"
+        f"EDO: {analysis.get('edo', 12)}\n"
+        f"Pitch-class universe: {analysis.get('pitch_class_universe', 'Z12')}\n"
         f"Events: {analysis.get('event_count', 'n/a')}\n"
         f"Windows: {len(analysis['series'])}\n"
         f"Note Count min/max/mean: {min(note_values):.0f}/{max(note_values):.0f}/{statistics.fmean(note_values):.2f}\n"
@@ -172,6 +182,11 @@ def build_demo() -> gr.Blocks:
         file_in = gr.File(label="Score file (MusicXML / MXL / MIDI)")
         with gr.Row():
             time_step_in = gr.Number(value=0.25, label="Time step (quarterLength)")
+            edo_in = gr.Radio(
+                choices=[12, 24, 48],
+                value=12,
+                label="Pitch-class universe (EDO)",
+            )
             view_mode_in = gr.Radio(
                 choices=["Raw Counts", "Normalized (0-1)"],
                 value="Raw Counts",
@@ -185,7 +200,7 @@ def build_demo() -> gr.Blocks:
         json_out = gr.File(label="Download JSON")
         run_btn.click(
             fn=run_cardinality_app,
-            inputs=[file_in, time_step_in, view_mode_in, pc_axis_in],
+            inputs=[file_in, time_step_in, edo_in, view_mode_in, pc_axis_in],
             outputs=[plot_out, summary_out, csv_out, json_out],
         )
     return demo

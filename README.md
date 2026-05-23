@@ -8,13 +8,20 @@ Cardinality-only symbolic toolkit with a graphical interface for score upload, a
 - Compute vertical cardinality over time:
   - `vertical_note_count`
   - `vertical_unique_pitch_count`
-  - `vertical_pitch_class_cardinality`
+  - `vertical_pitch_class_cardinality` (parameterized by 12-, 24-, or 48-EDO)
 - View results in an interactive Gradio interface with Plotly charts.
 - Switch between `Raw Counts` and `Normalized (0-1)` views.
 - Toggle a secondary axis for pitch-class cardinality visibility.
+- Select pitch-class universe (`12`, `24`, or `48` EDO) in the GUI.
 - Inspect peak-note annotations and summary statistics (min/max/mean).
 - Download analysis as `CSV` and `JSON`.
 - Use direct cardinality wrappers for script workflows.
+
+## Scope and limitations
+
+`vertical_pitch_class_cardinality` supports 12-, 24-, and 48-EDO. The default is 12-EDO. The metric is an equal-tempered symbolic pitch-class cardinality, not an acoustic, just-intonation, spectral, or continuous-frequency model.
+
+For microtonal repertoire, select 24-EDO or 48-EDO only when the symbolic score encoding preserves the relevant microtonal accidentals or pitch-space values and when an equal-tempered reduction is analytically appropriate.
 
 ## Installation
 
@@ -33,7 +40,7 @@ or double-click `run.bat`.
 ## CLI quick mode
 
 ```bash
-python -m textural_dimension --notes 4 --unique-pitches 3 --pc-cardinality 2
+python -m textural_dimension --notes 4 --unique-pitches 3 --pc-cardinality 2 --edo 24
 ```
 
 ## Analysis behavior

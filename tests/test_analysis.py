@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from music21.note import Note
+from music21.pitch import Pitch
 from music21.stream import Measure, Part, Score
 
 from textural_dimension.analysis import _build_cardinality_series, _collect_events, _time_axis
@@ -87,3 +88,44 @@ def test_sweepline_series_matches_naive_scan() -> None:
             }
         )
     assert sweep == naive
+
+
+def test_collect_events_supports_24_edo_pc_cardinality() -> None:
+    score = Score()
+    part = Part()
+
+    n1 = Note(quarterLength=1.0)
+    n1.pitch = Pitch(ps=60.0)
+
+    n2 = Note(quarterLength=1.0)
+    n2.pitch = Pitch(ps=60.5)
+
+    part.insert(0.0, n1)
+    part.insert(0.0, n2)
+    score.insert(0.0, part)
+
+    events, end_time = _collect_events(score, edo=24, bin_cents=50)
+    times = _time_axis(end_time, 1.0)
+    series = _build_cardinality_series(times, events)
+
+    assert series[0]["vertical_note_count"] == 2
+    assert series[0]["vertical_pitch_class_cardinality"] == 2
+
+
+def test_collect_events_supports_48_edo_pc_cardinality() -> None:
+    score = Score()
+    part = Part()
+
+    for ps in [60.0, 60.25, 60.5]:
+        n = Note(quarterLength=1.0)
+        n.pitch = Pitch(ps=ps)
+        part.insert(0.0, n)
+
+    score.insert(0.0, part)
+
+    events, end_time = _collect_events(score, edo=48, bin_cents=25)
+    times = _time_axis(end_time, 1.0)
+    series = _build_cardinality_series(times, events)
+
+    assert series[0]["vertical_note_count"] == 3
+    assert series[0]["vertical_pitch_class_cardinality"] == 3
