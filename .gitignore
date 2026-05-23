@@ -50,10 +50,10 @@ dist_wheel_test/
 recovery/
 
 # End-user installer runtime (portable Python, venvs) — not committed
-instalers/runtime/
-instalers/**/build/
-instalers/**/dist/
-instalers/**/output/
+installers/runtime/
+installers/**/build/
+installers/**/dist/
+installers/**/output/
 
 # Copyrighted local references (never commit)
 private_sources/

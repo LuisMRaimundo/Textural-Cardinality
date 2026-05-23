@@ -2,7 +2,7 @@
 """
 Bootstrap portable Python + Textural cardinality dependencies, then launch the Gradio app.
 
-Used by instalers/windows, instalers/mac, instalers/linux when running from a clone.
+Used by installers/windows, installers/mac, installers/linux when running from a clone.
 """
 
 from __future__ import annotations

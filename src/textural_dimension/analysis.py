@@ -72,7 +72,7 @@ def _midi_from_note_tuple(note: NoteTuple) -> float:
     return 12.0 * (octave + 1) + _STEP_TO_SEMITONE[step.upper()] + alter
 
 
-def _pitch_unit(note: NoteTuple, *, bin_cents: int) -> int:
+def _pitch_unit(note: NoteTuple, *, bin_cents: float) -> int:
     cents = _midi_from_note_tuple(note) * 100.0
     return int(round(cents / float(bin_cents)))
 

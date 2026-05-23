@@ -193,14 +193,17 @@ def build_demo() -> gr.Blocks:
     demo = gr.Blocks(title="Textural cardinality - Vertical Cardinality", theme=gr.themes.Soft())
     with demo:
         gr.Markdown("# Textural cardinality")
-        gr.Markdown("Upload a MusicXML/MXL/MIDI score to compute vertical cardinality over time.")
+        gr.Markdown(
+            "Upload a MusicXML/MXL/MIDI score to compute symbolic vertical cardinality over time "
+            "using equal-tempered quantisation grids."
+        )
         file_in = gr.File(label="Score file (MusicXML / MXL / MIDI)")
         with gr.Row():
             time_step_in = gr.Number(value=0.25, label="Time step (quarterLength)")
             tuning_preset_in = gr.Dropdown(
                 choices=["(none)"] + sorted(TUNING_PRESETS.keys()),
                 value="(none)",
-                label="Tuning preset",
+                label="Equal-tempered grid preset",
             )
             bin_cents_in = gr.Number(value=DEFAULT_BIN_CENTS, label="Bin size (cents)")
             edo_in = gr.Radio(
@@ -208,7 +211,7 @@ def build_demo() -> gr.Blocks:
                 value=DEFAULT_EDO,
                 label="Pitch-class universe (EDO)",
             )
-            auto_detect_in = gr.Checkbox(value=False, label="Auto-detect tuning from score")
+            auto_detect_in = gr.Checkbox(value=False, label="Auto-detect compatible symbolic grid from score")
             view_mode_in = gr.Radio(
                 choices=["Raw Counts", "Normalized (0-1)"],
                 value="Raw Counts",
