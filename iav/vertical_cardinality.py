@@ -48,7 +48,7 @@ def _midi_from_note_tuple(note: NoteTuple) -> float:
     return 12.0 * (octave + 1) + _STEP_TO_SEMITONE[str(step).upper()] + alter
 
 
-def _pitch_unit(note: NoteTuple, *, bin_cents: int) -> int:
+def _pitch_unit(note: NoteTuple, *, bin_cents: float) -> int:
     cents = _midi_from_note_tuple(note) * 100.0
     return int(round(cents / float(bin_cents)))
 
@@ -62,7 +62,7 @@ def _pc_class(note: NoteTuple, *, edo: int = 12) -> int:
 def vertical_cardinality_for_notes(
     notes: Sequence[NoteTuple],
     *,
-    bin_cents: int = 100,
+    bin_cents: float = 100.0,
     edo: int = 12,
 ) -> dict[str, int | None]:
     """Cardinality metrics for one vertical slice (after caller-applied dedupe)."""
@@ -86,7 +86,7 @@ def vertical_cardinality_for_notes(
 def vertical_cardinality_from_summary_row(
     row: Mapping[str, Any],
     *,
-    bin_cents: int = 100,
+    bin_cents: float = 100.0,
     edo: int = 12,
 ) -> dict[str, int | None]:
     """

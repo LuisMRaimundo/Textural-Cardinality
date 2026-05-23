@@ -1,7 +1,7 @@
 # Portable Python setup for Install-and-Run.bat (cloned repo, no GitHub download).
 $ErrorActionPreference = 'Stop'
 $Root = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
-$RuntimePy = Join-Path $Root 'instalers\runtime\windows\python'
+$RuntimePy = Join-Path $Root 'installers\runtime\windows\python'
 $PyExe = Join-Path $RuntimePy 'python.exe'
 
 if (Test-Path $PyExe) { exit 0 }

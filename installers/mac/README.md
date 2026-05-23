@@ -2,7 +2,7 @@
 
 ## End users
 
-1. Open Terminal in this folder (`instalers/mac/`).
+1. Open Terminal in this folder (`installers/mac/`).
 2. Run:
    ```bash
    chmod +x install-easy.sh

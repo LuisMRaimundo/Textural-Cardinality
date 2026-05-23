@@ -17,10 +17,15 @@ def main() -> None:
         run_gradio_app()
         return
 
-    parser = argparse.ArgumentParser(description="Vertical cardinality (cardinality-only build).")
-    parser.add_argument("--notes", type=int, default=0, help="Value for 'Notes'.")
-    parser.add_argument("--unique-pitches", type=int, default=0, help="Value for 'Unique pitches'.")
-    parser.add_argument("--pc-cardinality", type=int, default=None, help="Optional explicit PC cardinality.")
+    parser = argparse.ArgumentParser(
+        description=(
+            "Vertical cardinality direct-input mode. "
+            "This CLI path does not parse a score file; it uses supplied summary-row values."
+        )
+    )
+    parser.add_argument("--notes", type=int, default=0, help="Direct input value for 'Notes'.")
+    parser.add_argument("--unique-pitches", type=int, default=0, help="Direct input value for 'Unique pitches'.")
+    parser.add_argument("--pc-cardinality", type=int, default=None, help="Optional explicit direct input for 'PC cardinality'.")
     parser.add_argument("--bin-cents", type=float, default=DEFAULT_BIN_CENTS, help="Pitch quantization grid in cents.")
     parser.add_argument(
         "--edo",

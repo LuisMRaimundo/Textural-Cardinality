@@ -4,8 +4,8 @@ title Textural cardinality
 
 cd /d "%~dp0..\.."
 set "ROOT=%CD%"
-set "PY=%ROOT%\instalers\runtime\windows\python\python.exe"
-set "BOOT=%ROOT%\instalers\common\bootstrap.py"
+set "PY=%ROOT%\installers\runtime\windows\python\python.exe"
+set "BOOT=%ROOT%\installers\common\bootstrap.py"
 
 echo.
 echo  Textural cardinality
@@ -16,7 +16,7 @@ if not exist "%PY%" (
     echo  First run: installing portable Python and libraries...
     echo  Internet connection required. This may take several minutes.
     echo.
-    powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\instalers\windows\setup.ps1"
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\installers\windows\setup.ps1"
     if errorlevel 1 (
         echo Setup failed. Check your internet connection and try again.
         pause

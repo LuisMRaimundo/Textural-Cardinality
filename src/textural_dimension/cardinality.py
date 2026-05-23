@@ -22,7 +22,7 @@ NoteTuple = tuple[str, float, int]
 def vertical_cardinality_for_notes(
     notes: Sequence[NoteTuple],
     *,
-    bin_cents: int = 100,
+    bin_cents: float = 100.0,
     edo: int = 12,
 ) -> dict[str, int | None]:
     """Compute vertical cardinality for an explicit note tuple sequence."""
@@ -32,7 +32,7 @@ def vertical_cardinality_for_notes(
 def vertical_cardinality_from_summary_row(
     row: Mapping[str, Any],
     *,
-    bin_cents: int = 100,
+    bin_cents: float = 100.0,
     edo: int = 12,
 ) -> dict[str, int | None]:
     """Recover vertical cardinality fields from one summary-row dictionary."""
