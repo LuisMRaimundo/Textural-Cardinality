@@ -49,6 +49,9 @@ def _build_plot(analysis: dict[str, Any], *, view_mode: str, pc_secondary_axis: 
         for r in analysis["series"]
     ]
     is_normalized = view_mode == "Normalized (0-1)"
+    if is_normalized:
+        # Normalized traces share comparable scale; prefer single-axis view.
+        pc_secondary_axis = False
     y1_title = "Normalized Cardinality (0-1)" if is_normalized else "Cardinality"
     y2_title = f"PC Cardinality ({edo}-EDO)" if not is_normalized else f"Normalized PC ({edo}-EDO, 0-1)"
     pc_label = f"Pitch-Class Cardinality ({edo}-EDO)"
@@ -174,7 +177,7 @@ def run_cardinality_app(
     unique_values = [float(r["vertical_unique_pitch_count"] or 0) for r in analysis["series"]]
     pc_values = [float(r["vertical_pitch_class_cardinality"] or 0) for r in analysis["series"]]
     summary = (
-        f"File: {analysis['source_file']}\n"
+        f"File: {analysis.get('source_file_name', 'unknown')}\n"
         f"Duration (quarters): {analysis['duration_quarters']:.3f}\n"
         f"Time step: {analysis['time_step']}\n"
         f"EDO: {analysis.get('edo', 12)}\n"
@@ -186,6 +189,11 @@ def run_cardinality_app(
         f"Unique Pitch min/max/mean: {min(unique_values):.0f}/{max(unique_values):.0f}/{statistics.fmean(unique_values):.2f}\n"
         f"PC Cardinality min/max/mean: {min(pc_values):.0f}/{max(pc_values):.0f}/{statistics.fmean(pc_values):.2f}"
     )
+    if pc_values and all(v == pc_values[0] for v in pc_values):
+        if pc_values[0] == float(analysis.get("edo", 0)):
+            summary += f"\nPC coverage: full Z{int(analysis.get('edo', 0))} saturation in all sampled windows."
+        else:
+            summary += "\nPC cardinality is constant across all sampled windows."
     return fig, summary, csv_path, json_path
 
 
@@ -217,7 +225,7 @@ def build_demo() -> gr.Blocks:
                 value="Raw Counts",
                 label="Display mode",
             )
-            pc_axis_in = gr.Checkbox(value=True, label="Use secondary axis for PC cardinality")
+            pc_axis_in = gr.Checkbox(value=True, label="Use secondary axis for PC cardinality (mainly useful for raw counts)")
         run_btn = gr.Button("Run analysis", variant="primary")
         plot_out = gr.Plot(label="Vertical cardinality plot")
         summary_out = gr.Textbox(label="Summary", lines=10)
