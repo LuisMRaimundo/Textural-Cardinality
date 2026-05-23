@@ -17,7 +17,17 @@ from music21.stream import Score
 
 NoteTuple = tuple[str, float, int]
 _EPS = 1e-9
-SUPPORTED_EDOS = {12, 24, 48}
+_TOL = 1e-6
+DEFAULT_BIN_CENTS = 100.0
+DEFAULT_EDO = 12
+TUNING_PRESETS = {
+    "12_edo": {"bin_cents": 100.0, "edo": 12},
+    "24_edo": {"bin_cents": 50.0, "edo": 24},
+    "48_edo": {"bin_cents": 25.0, "edo": 48},
+    "31_edo": {"bin_cents": 38.70967741935484, "edo": 31},
+    "19_edo": {"bin_cents": 63.15789473684211, "edo": 19},
+    "53_edo": {"bin_cents": 22.641509433962263, "edo": 53},
+}
 _STEP_TO_SEMITONE = {
     "C": 0.0,
     "D": 2.0,
@@ -31,9 +41,16 @@ _STEP_TO_SEMITONE = {
 
 def validate_edo(edo: int) -> int:
     edo = int(edo)
-    if edo not in SUPPORTED_EDOS:
-        raise ValueError("edo must be one of: 12, 24, 48")
+    if edo <= 0:
+        raise ValueError("edo must be a positive integer")
     return edo
+
+
+def validate_bin_cents(bin_cents: float) -> float:
+    bin_cents = float(bin_cents)
+    if bin_cents <= 0:
+        raise ValueError("bin_cents must be > 0")
+    return bin_cents
 
 
 def _nearest_int(x: float) -> int:
@@ -63,20 +80,126 @@ def _pitch_unit(note: NoteTuple, *, bin_cents: int) -> int:
 def _pc_class(note: NoteTuple, *, edo: int = 12) -> int:
     edo = validate_edo(edo)
     ps = _midi_from_note_tuple(note)
-    if edo == 12:
-        # Preserve existing 12-EDO behaviour as closely as possible.
-        return int(round(ps)) % 12
-    step = (ps % 12.0) * edo / 12.0
-    return _nearest_int(step) % edo
+    return int(round(ps * float(edo) / 12.0)) % edo
+
+
+def _is_multiple_of_step(value: float, step: float, tol: float = _TOL) -> bool:
+    nearest = round(value / step)
+    return abs(value - nearest * step) <= tol
+
+
+def _iter_raw_pitches(events: list[dict[str, Any]]) -> list[tuple[int | None, float | None, float]]:
+    out: list[tuple[int | None, float | None, float]] = []
+    for ev in events:
+        for rp in ev.get("raw_pitches", []):
+            out.append((rp.get("part_index"), rp.get("beat"), float(rp["ps"])))
+    return out
+
+
+def _non_grid_pitches(
+    events: list[dict[str, Any]],
+    *,
+    bin_cents: float,
+    tol: float = _TOL,
+) -> list[tuple[int | None, float | None, float]]:
+    bad: list[tuple[int | None, float | None, float]] = []
+    for part_index, beat, ps in _iter_raw_pitches(events):
+        nearest = round((ps * 100.0) / bin_cents)
+        snapped = (nearest * bin_cents) / 100.0
+        if abs(ps - snapped) > tol:
+            bad.append((part_index, beat, ps))
+    return bad
+
+
+def _requantize_events(events: list[dict[str, Any]], *, bin_cents: float, edo: int) -> None:
+    for ev in events:
+        pitches = ev["notes"]
+        ev["units"] = [_pitch_unit(n, bin_cents=bin_cents) for n in pitches]
+        ev["pcs"] = [_pc_class(n, edo=edo) for n in pitches]
+
+
+def detect_tuning_grid(events: list[dict[str, Any]]) -> dict[str, Any]:
+    """
+    Inspect every event pitch-space value and infer a compatible EDO grid.
+    """
+    raw = _iter_raw_pitches(events)
+    if not raw:
+        return {
+            "detected_bin_cents": DEFAULT_BIN_CENTS,
+            "detected_edo": DEFAULT_EDO,
+            "tuning_preset_match": "12_edo",
+            "non_grid_pitches": [],
+        }
+
+    fracs: list[float] = []
+    for _, _, ps in raw:
+        frac = ps - math.floor(ps)
+        if abs(frac - 1.0) <= _TOL or abs(frac) <= _TOL:
+            frac = 0.0
+        fracs.append(frac)
+
+    if all(abs(frac) <= _TOL for frac in fracs):
+        return {
+            "detected_bin_cents": DEFAULT_BIN_CENTS,
+            "detected_edo": DEFAULT_EDO,
+            "tuning_preset_match": "12_edo",
+            "non_grid_pitches": [],
+        }
+
+    candidates = [
+        ("24_edo", 0.5, 50.0, 24),
+        ("48_edo", 0.25, 25.0, 48),
+        (None, 1.0 / 3.0, 100.0 / 3.0, 36),
+        (None, 1.0 / 6.0, 100.0 / 6.0, 72),
+    ]
+    for preset_name, step, bin_cents, edo in candidates:
+        if all(_is_multiple_of_step(frac, step) for frac in fracs):
+            return {
+                "detected_bin_cents": float(bin_cents),
+                "detected_edo": int(edo),
+                "tuning_preset_match": preset_name,
+                "non_grid_pitches": [],
+            }
+
+    best_edo: int | None = None
+    for edo in range(2, 241):
+        step = 12.0 / float(edo)
+        if all(_is_multiple_of_step(frac, step) for frac in fracs):
+            best_edo = edo
+    if best_edo is not None:
+        best_bin = 1200.0 / float(best_edo)
+        preset_name: str | None = None
+        for name, preset in TUNING_PRESETS.items():
+            if (
+                int(preset["edo"]) == best_edo
+                and abs(float(preset["bin_cents"]) - best_bin) <= _TOL
+            ):
+                preset_name = name
+                break
+        return {
+            "detected_bin_cents": best_bin,
+            "detected_edo": best_edo,
+            "tuning_preset_match": preset_name,
+            "non_grid_pitches": [],
+        }
+
+    return {
+        "detected_bin_cents": DEFAULT_BIN_CENTS,
+        "detected_edo": DEFAULT_EDO,
+        "tuning_preset_match": None,
+        "non_grid_pitches": _non_grid_pitches(events, bin_cents=DEFAULT_BIN_CENTS),
+    }
 
 
 def _collect_events(
     score: Score,
     *,
     edo: int = 12,
-    bin_cents: int = 100,
+    bin_cents: float = 100.0,
 ) -> tuple[list[dict[str, Any]], float]:
     edo = validate_edo(edo)
+    bin_cents = validate_bin_cents(bin_cents)
+    part_index_map: dict[int, int] = {id(part): i for i, part in enumerate(score.parts)}
     events: list[dict[str, Any]] = []
     end_time = 0.0
     for el in score.recurse().notes:
@@ -85,15 +208,33 @@ def _collect_events(
         duration = float(el.duration.quarterLength) if el.duration is not None else 0.0
         end = offset + max(0.0, duration)
         pitches: list[NoteTuple] = []
+        raw_pitches: list[dict[str, Any]] = []
+        part = el.getContextByClass("Part")
+        part_index = part_index_map.get(id(part)) if part is not None else None
+        beat_value = float(el.beat) if getattr(el, "beat", None) is not None else offset
         if isinstance(el, Note):
             nt = _pitch_to_note_tuple(el.pitch)
             if nt is not None:
                 pitches.append(nt)
+                raw_pitches.append(
+                    {
+                        "part_index": part_index,
+                        "beat": beat_value,
+                        "ps": float(el.pitch.ps),
+                    }
+                )
         elif isinstance(el, Chord):
             for p in el.pitches:
                 nt = _pitch_to_note_tuple(p)
                 if nt is not None:
                     pitches.append(nt)
+                    raw_pitches.append(
+                        {
+                            "part_index": part_index,
+                            "beat": beat_value,
+                            "ps": float(p.ps),
+                        }
+                    )
         if not pitches:
             continue
         events.append(
@@ -103,6 +244,7 @@ def _collect_events(
                 "notes": pitches,
                 "units": [_pitch_unit(n, bin_cents=bin_cents) for n in pitches],
                 "pcs": [_pc_class(n, edo=edo) for n in pitches],
+                "raw_pitches": raw_pitches,
             }
         )
         end_time = max(end_time, end)
@@ -171,12 +313,77 @@ def analyze_vertical_cardinality(
     score_path: str,
     *,
     time_step: float = 0.25,
-    edo: int = 12,
-    bin_cents: int = 100,
+    edo: int = DEFAULT_EDO,
+    bin_cents: float = DEFAULT_BIN_CENTS,
+    auto_detect_tuning: bool = False,
+    tuning_preset: str | None = None,
 ) -> dict[str, Any]:
     edo = validate_edo(edo)
+    bin_cents = validate_bin_cents(bin_cents)
+    if tuning_preset is not None and tuning_preset not in TUNING_PRESETS:
+        raise ValueError(f"Unknown tuning_preset: {tuning_preset}")
+
     score = converter.parse(score_path)
-    events, end_time = _collect_events(score, edo=edo, bin_cents=bin_cents)
+    events, end_time = _collect_events(score, edo=DEFAULT_EDO, bin_cents=DEFAULT_BIN_CENTS)
+
+    explicit_params = (abs(bin_cents - DEFAULT_BIN_CENTS) > _TOL) or (edo != DEFAULT_EDO)
+    active_bin_cents = DEFAULT_BIN_CENTS
+    active_edo = DEFAULT_EDO
+    active_preset: str | None = "12_edo"
+    tuning_provenance = "default_12_edo"
+    auto_detected_from_n_events: int | None = None
+
+    if explicit_params:
+        active_bin_cents = bin_cents
+        active_edo = edo
+        tuning_provenance = "explicit_bin_cents_edo"
+        for name, preset in TUNING_PRESETS.items():
+            if (
+                int(preset["edo"]) == active_edo
+                and abs(float(preset["bin_cents"]) - active_bin_cents) <= _TOL
+            ):
+                active_preset = name
+                break
+        else:
+            active_preset = None
+    elif tuning_preset is not None:
+        preset = TUNING_PRESETS[tuning_preset]
+        active_bin_cents = float(preset["bin_cents"])
+        active_edo = int(preset["edo"])
+        active_preset = tuning_preset
+        tuning_provenance = "tuning_preset"
+    elif auto_detect_tuning:
+        detected = detect_tuning_grid(events)
+        active_bin_cents = float(detected["detected_bin_cents"])
+        active_edo = int(detected["detected_edo"])
+        active_preset = detected.get("tuning_preset_match")
+        tuning_provenance = "auto_detected"
+        auto_detected_from_n_events = len(events)
+
+    _requantize_events(events, bin_cents=active_bin_cents, edo=active_edo)
+    non_grid = _non_grid_pitches(events, bin_cents=active_bin_cents)
+    warnings: list[dict[str, Any]] = []
+    if non_grid:
+        warnings.append(
+            {
+                "code": "non_grid_pitches",
+                "severity": "warning",
+                "message": (
+                    "The score contains pitches that cannot be quantised exactly "
+                    "to the active tuning grid. These events have been quantised "
+                    "to the nearest grid point. Consider increasing the grid "
+                    "resolution (smaller bin_cents) or supplying a custom "
+                    "tuning."
+                ),
+                "details": {
+                    "n_non_grid_pitches": len(non_grid),
+                    "active_bin_cents": float(active_bin_cents),
+                    "active_edo": int(active_edo),
+                    "sample": non_grid[:5],
+                },
+            }
+        )
+
     times = _time_axis(end_time, time_step)
     series = _build_cardinality_series(times, events)
     return {
@@ -184,9 +391,21 @@ def analyze_vertical_cardinality(
         "time_step": float(time_step),
         "duration_quarters": float(end_time),
         "event_count": len(events),
-        "edo": edo,
-        "pitch_class_universe": f"Z{edo}",
-        "bin_cents": int(bin_cents),
+        "edo": int(active_edo),
+        "pitch_class_universe": f"Z{active_edo}",
+        "bin_cents": float(active_bin_cents),
+        "warnings": warnings,
+        "params": {
+            "tuning": {
+                "bin_cents": float(active_bin_cents),
+                "edo": int(active_edo),
+                "tuning_preset": active_preset,
+                "tuning_provenance": tuning_provenance,
+                "auto_detected_from_n_events": auto_detected_from_n_events,
+                "non_grid_pitches_count": len(non_grid),
+                "non_grid_pitches_sample": non_grid[:5],
+            }
+        },
         "series": series,
     }
 
@@ -199,6 +418,14 @@ def write_cardinality_csv(analysis: dict[str, Any]) -> str:
     ) as tf:
         out_path = tf.name
     with open(out_path, "w", newline="", encoding="utf-8") as f:
+        tuning = analysis.get("params", {}).get("tuning", {})
+        f.write(
+            "# tuning: "
+            f"bin_cents={tuning.get('bin_cents', analysis.get('bin_cents'))}, "
+            f"edo={tuning.get('edo', analysis.get('edo'))}, "
+            f"preset={tuning.get('tuning_preset')}, "
+            f"provenance={tuning.get('tuning_provenance')}\n"
+        )
         w = csv.DictWriter(
             f,
             fieldnames=[

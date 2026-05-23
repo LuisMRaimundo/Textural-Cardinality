@@ -34,7 +34,7 @@ where `step_to_semitone = {C:0, D:2, E:4, F:5, G:7, A:9, B:11}`.
 
 ### 2.2 Pitch unit quantization
 
-With `bin_cents = 100` (default), the pitch unit is:
+`bin_cents` is configurable (default `100` cents). The pitch unit is:
 
 - `cents(n) = 100 * ps(n)`
 - `unit(n) = round(cents(n) / bin_cents)`
@@ -43,12 +43,12 @@ For `bin_cents = 100`, this is equivalent to semitone-quantized MIDI bins.
 
 ### 2.3 Pitch class (EDO-parameterized)
 
-- `pc_edo(n) = round_to_nearest_edo_step((ps(n) mod 12) * edo / 12) mod edo`
-- with `edo ∈ {12, 24, 48}`
+- `pc_edo(n) = round(ps(n) * edo / 12) mod edo`
+- where `edo` is configurable (default `12`; arbitrary positive EDOs accepted)
 
 Implementation details:
 
-- For `edo = 12`, the implementation preserves previous chromatic behavior:
+- For `edo = 12`, this reduces to:
   - `pc_12(n) = round(ps(n)) mod 12`
 - For `edo = 24`, one pitch-class step = 50 cents.
 - For `edo = 48`, one pitch-class step = 25 cents.

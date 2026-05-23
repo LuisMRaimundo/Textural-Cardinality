@@ -9,6 +9,9 @@ import gradio as gr
 import plotly.graph_objects as go
 
 from textural_dimension.analysis import (
+    DEFAULT_BIN_CENTS,
+    DEFAULT_EDO,
+    TUNING_PRESETS,
     analyze_vertical_cardinality,
     write_cardinality_csv,
     write_cardinality_json,
@@ -144,7 +147,10 @@ def _build_plot(analysis: dict[str, Any], *, view_mode: str, pc_secondary_axis: 
 def run_cardinality_app(
     file_obj: Any,
     time_step: float,
+    tuning_preset: str,
+    bin_cents: float,
     edo: int,
+    auto_detect_tuning: bool,
     view_mode: str,
     pc_secondary_axis: bool,
 ):
@@ -152,7 +158,15 @@ def run_cardinality_app(
     ts = float(time_step) if time_step is not None else 0.25
     if ts <= 0:
         raise gr.Error("Time step must be > 0.")
-    analysis = analyze_vertical_cardinality(score_path, time_step=ts, edo=int(edo))
+    preset = None if tuning_preset == "(none)" else tuning_preset
+    analysis = analyze_vertical_cardinality(
+        score_path,
+        time_step=ts,
+        bin_cents=float(bin_cents) if bin_cents is not None else DEFAULT_BIN_CENTS,
+        edo=int(edo) if edo is not None else DEFAULT_EDO,
+        auto_detect_tuning=bool(auto_detect_tuning),
+        tuning_preset=preset,
+    )
     fig = _build_plot(analysis, view_mode=view_mode, pc_secondary_axis=bool(pc_secondary_axis))
     csv_path = write_cardinality_csv(analysis)
     json_path = write_cardinality_json(analysis)
@@ -165,6 +179,7 @@ def run_cardinality_app(
         f"Time step: {analysis['time_step']}\n"
         f"EDO: {analysis.get('edo', 12)}\n"
         f"Pitch-class universe: {analysis.get('pitch_class_universe', 'Z12')}\n"
+        f"Tuning provenance: {analysis.get('params', {}).get('tuning', {}).get('tuning_provenance', 'n/a')}\n"
         f"Events: {analysis.get('event_count', 'n/a')}\n"
         f"Windows: {len(analysis['series'])}\n"
         f"Note Count min/max/mean: {min(note_values):.0f}/{max(note_values):.0f}/{statistics.fmean(note_values):.2f}\n"
@@ -182,11 +197,18 @@ def build_demo() -> gr.Blocks:
         file_in = gr.File(label="Score file (MusicXML / MXL / MIDI)")
         with gr.Row():
             time_step_in = gr.Number(value=0.25, label="Time step (quarterLength)")
+            tuning_preset_in = gr.Dropdown(
+                choices=["(none)"] + sorted(TUNING_PRESETS.keys()),
+                value="(none)",
+                label="Tuning preset",
+            )
+            bin_cents_in = gr.Number(value=DEFAULT_BIN_CENTS, label="Bin size (cents)")
             edo_in = gr.Radio(
-                choices=[12, 24, 48],
-                value=12,
+                choices=[12, 19, 24, 31, 48, 53, 72],
+                value=DEFAULT_EDO,
                 label="Pitch-class universe (EDO)",
             )
+            auto_detect_in = gr.Checkbox(value=False, label="Auto-detect tuning from score")
             view_mode_in = gr.Radio(
                 choices=["Raw Counts", "Normalized (0-1)"],
                 value="Raw Counts",
@@ -200,7 +222,7 @@ def build_demo() -> gr.Blocks:
         json_out = gr.File(label="Download JSON")
         run_btn.click(
             fn=run_cardinality_app,
-            inputs=[file_in, time_step_in, edo_in, view_mode_in, pc_axis_in],
+            inputs=[file_in, time_step_in, tuning_preset_in, bin_cents_in, edo_in, auto_detect_in, view_mode_in, pc_axis_in],
             outputs=[plot_out, summary_out, csv_out, json_out],
         )
     return demo
