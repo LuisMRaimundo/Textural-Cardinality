@@ -5,34 +5,54 @@ from __future__ import annotations
 from collections import Counter
 import csv
 import json
+import math
 import tempfile
 from typing import Any
 
 from music21 import converter
 from music21.chord import Chord
 from music21.note import Note
-from music21.pitch import Accidental, Pitch
+from music21.pitch import Pitch
 from music21.stream import Score
 
 NoteTuple = tuple[str, float, int]
 _EPS = 1e-9
+SUPPORTED_EDOS = {12, 24, 48}
+_STEP_TO_SEMITONE = {
+    "C": 0.0,
+    "D": 2.0,
+    "E": 4.0,
+    "F": 5.0,
+    "G": 7.0,
+    "A": 9.0,
+    "B": 11.0,
+}
+
+
+def validate_edo(edo: int) -> int:
+    edo = int(edo)
+    if edo not in SUPPORTED_EDOS:
+        raise ValueError("edo must be one of: 12, 24, 48")
+    return edo
+
+
+def _nearest_int(x: float) -> int:
+    return int(math.floor(float(x) + 0.5 + 1e-9))
 
 
 def _pitch_to_note_tuple(p: Pitch) -> NoteTuple | None:
     if p.octave is None:
         return None
-    step = str(p.step)
-    alter = float(p.accidental.alter) if p.accidental is not None and p.accidental.alter is not None else 0.0
-    return (step, alter, int(p.octave))
+    step = str(p.step).upper()
+    octave = int(p.octave)
+    base_ps = 12.0 * (octave + 1) + _STEP_TO_SEMITONE[step]
+    alter = float(p.ps) - base_ps
+    return (step, alter, octave)
 
 
 def _midi_from_note_tuple(note: NoteTuple) -> float:
     step, alter, octave = note[0], float(note[1]), int(note[2])
-    p = Pitch(step)
-    p.octave = octave
-    if alter:
-        p.accidental = Accidental(alter)
-    return float(p.ps)
+    return 12.0 * (octave + 1) + _STEP_TO_SEMITONE[step.upper()] + alter
 
 
 def _pitch_unit(note: NoteTuple, *, bin_cents: int) -> int:
@@ -40,11 +60,23 @@ def _pitch_unit(note: NoteTuple, *, bin_cents: int) -> int:
     return int(round(cents / float(bin_cents)))
 
 
-def _pc_class(note: NoteTuple) -> int:
-    return int(round(_midi_from_note_tuple(note))) % 12
+def _pc_class(note: NoteTuple, *, edo: int = 12) -> int:
+    edo = validate_edo(edo)
+    ps = _midi_from_note_tuple(note)
+    if edo == 12:
+        # Preserve existing 12-EDO behaviour as closely as possible.
+        return int(round(ps)) % 12
+    step = (ps % 12.0) * edo / 12.0
+    return _nearest_int(step) % edo
 
 
-def _collect_events(score: Score) -> tuple[list[dict[str, Any]], float]:
+def _collect_events(
+    score: Score,
+    *,
+    edo: int = 12,
+    bin_cents: int = 100,
+) -> tuple[list[dict[str, Any]], float]:
+    edo = validate_edo(edo)
     events: list[dict[str, Any]] = []
     end_time = 0.0
     for el in score.recurse().notes:
@@ -69,8 +101,8 @@ def _collect_events(score: Score) -> tuple[list[dict[str, Any]], float]:
                 "offset": offset,
                 "end": end,
                 "notes": pitches,
-                "units": [_pitch_unit(n, bin_cents=100) for n in pitches],
-                "pcs": [_pc_class(n) for n in pitches],
+                "units": [_pitch_unit(n, bin_cents=bin_cents) for n in pitches],
+                "pcs": [_pc_class(n, edo=edo) for n in pitches],
             }
         )
         end_time = max(end_time, end)
@@ -135,9 +167,16 @@ def _build_cardinality_series(times: list[float], events: list[dict[str, Any]]) 
     return series
 
 
-def analyze_vertical_cardinality(score_path: str, *, time_step: float = 0.25) -> dict[str, Any]:
+def analyze_vertical_cardinality(
+    score_path: str,
+    *,
+    time_step: float = 0.25,
+    edo: int = 12,
+    bin_cents: int = 100,
+) -> dict[str, Any]:
+    edo = validate_edo(edo)
     score = converter.parse(score_path)
-    events, end_time = _collect_events(score)
+    events, end_time = _collect_events(score, edo=edo, bin_cents=bin_cents)
     times = _time_axis(end_time, time_step)
     series = _build_cardinality_series(times, events)
     return {
@@ -145,6 +184,9 @@ def analyze_vertical_cardinality(score_path: str, *, time_step: float = 0.25) ->
         "time_step": float(time_step),
         "duration_quarters": float(end_time),
         "event_count": len(events),
+        "edo": edo,
+        "pitch_class_universe": f"Z{edo}",
+        "bin_cents": int(bin_cents),
         "series": series,
     }
 
