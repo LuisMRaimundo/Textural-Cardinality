@@ -1,4 +1,11 @@
-"""Score-driven vertical cardinality analysis."""
+"""Score-driven vertical cardinality analysis.
+
+Cardinality is evaluated instantaneously at score time *t* as the size of the
+active note multiset. Because that function changes only at event onsets and
+offsets, :func:`_time_axis` always includes those boundary times so brief
+sonorities are not missed. An optional uniform ``time_step`` grid is merged in
+for plotting convenience only.
+"""
 
 from __future__ import annotations
 
@@ -252,16 +259,37 @@ def _collect_events(
     return events, end_time
 
 
-def _time_axis(end_time: float, time_step: float) -> list[float]:
-    step = max(1e-6, float(time_step))
-    t = 0.0
-    out: list[float] = []
-    while t <= end_time + 1e-9:
-        out.append(round(t, 6))
-        t += step
-    if not out:
-        out.append(0.0)
-    return out
+def _time_axis(
+    end_time: float,
+    time_step: float | None,
+    events: list[dict[str, Any]] | None = None,
+) -> list[float]:
+    """
+    Build analysis times that include every vertical state change.
+
+    Event onsets and offsets are always included so brief sonorities are not
+    missed between coarse uniform grid points. When ``time_step`` is set, a
+    regular grid is merged in for plotting convenience.
+    """
+    times: set[float] = {0.0}
+    if end_time > 0.0:
+        times.add(round(end_time, 6))
+
+    if events:
+        for ev in events:
+            times.add(round(float(ev["offset"]), 6))
+            times.add(round(float(ev["end"]), 6))
+
+    if time_step is not None:
+        step = max(1e-6, float(time_step))
+        t = 0.0
+        while t <= end_time + 1e-9:
+            times.add(round(t, 6))
+            t += step
+
+    if not times:
+        times.add(0.0)
+    return sorted(times)
 
 
 def _build_cardinality_series(times: list[float], events: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -313,7 +341,7 @@ def _build_cardinality_series(times: list[float], events: list[dict[str, Any]]) 
 def analyze_vertical_cardinality(
     score_path: str,
     *,
-    time_step: float = 0.25,
+    time_step: float | None = 0.25,
     edo: int = DEFAULT_EDO,
     bin_cents: float = DEFAULT_BIN_CENTS,
     auto_detect_tuning: bool = False,
@@ -386,13 +414,19 @@ def analyze_vertical_cardinality(
             }
         )
 
-    times = _time_axis(end_time, time_step)
+    times = _time_axis(end_time, time_step, events)
     series = _build_cardinality_series(times, events)
     result: dict[str, Any] = {
         "source_file_name": Path(str(score_path)).name,
-        "time_step": float(time_step),
+        "time_step": float(time_step) if time_step is not None else None,
+        "sampling": (
+            "event_boundaries_with_uniform_grid"
+            if time_step is not None
+            else "event_boundaries_only"
+        ),
         "duration_quarters": float(end_time),
         "event_count": len(events),
+        "sample_count": len(times),
         "edo": int(active_edo),
         "pitch_class_universe": f"Z{active_edo}",
         "bin_cents": float(active_bin_cents),
@@ -414,7 +448,6 @@ def analyze_vertical_cardinality(
         result["source_file_internal_path"] = str(score_path)
     return result
 
-
 def write_cardinality_csv(analysis: dict[str, Any]) -> str:
     with tempfile.NamedTemporaryFile(
         prefix="textural_dimension_cardinality_",
@@ -425,8 +458,12 @@ def write_cardinality_csv(analysis: dict[str, Any]) -> str:
     with open(out_path, "w", newline="", encoding="utf-8") as f:
         tuning = analysis.get("params", {}).get("tuning", {})
         f.write(
-            "# tuning: "
-            f"bin_cents={tuning.get('bin_cents', analysis.get('bin_cents'))}, "
+            "# sampling: "
+            f"{analysis.get('sampling', 'n/a')}, "
+            f"time_step={analysis.get('time_step')}, "
+            f"sample_count={analysis.get('sample_count', len(analysis.get('series', [])))}, "
+            f"event_count={analysis.get('event_count', 'n/a')}; "
+            f"tuning: bin_cents={tuning.get('bin_cents', analysis.get('bin_cents'))}, "
             f"edo={tuning.get('edo', analysis.get('edo'))}, "
             f"preset={tuning.get('tuning_preset')}, "
             f"provenance={tuning.get('tuning_provenance')}\n"

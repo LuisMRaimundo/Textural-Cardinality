@@ -17,9 +17,16 @@ Each subfolder includes a **README** with platform-specific steps.
 1. Installs or detects **Python 3.10 or 3.11** (on Windows, installs automatically if missing).
 2. Fetches source from **https://github.com/LuisMRaimundo/Textural-Cardinality** (`main` branch).
 3. Creates an isolated environment and installs libraries from `requirements-install.txt`.
-4. Adds a **shortcut** to launch the **Gradio** interface (vertical cardinality analysis).
+4. Adds a **shortcut** to launch the **Gradio** interface (vertical cardinality analysis with exact event-boundary sampling).
 
 The first run may take **10–25 minutes** (download plus scientific packages). An **Internet connection** is required.
+
+## Analysis features (installed application)
+
+- Symbolic vertical cardinality: note count, unique pitch count, pitch-class cardinality (12-EDO).
+- Exact temporal sampling at every event onset and offset (brief events are not missed).
+- Configurable supplementary time step for plotting; CSV/JSON export.
+- See [`TECHNICAL_MANUAL.md`](../TECHNICAL_MANUAL.md) in the repository root for formulas and interpretation boundaries.
 
 ## Not included in Git
 

@@ -1,7 +1,9 @@
 """
-Symbolic vertical cardinality (Interval Analyser–compatible API).
+Symbolic vertical cardinality helpers.
 
-Counts notated pitch events / pitch units / pitch classes per vertical slice or summary row.
+Counts notated pitch events, pitch units, and pitch classes for one vertical
+slice or summary row. Score-wide time series use event-boundary sampling in
+``textural_dimension.analysis``; see ``TECHNICAL_MANUAL.md`` §4.
 """
 
 from __future__ import annotations

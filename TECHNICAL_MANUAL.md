@@ -51,43 +51,17 @@ For a score-global time instant `t`, let `A(t)` be the multiset of active note e
 
 ### 1.2 Cardinality hierarchy and ratios
 
-Let `A(t)` be the multiset of active note events at score-global time `t`.
-
-`vertical_note_count(t) = |A(t)|`
-
-Let `U(t)` be the set of active symbolic pitch units after pitch-space quantisation.
-
-`vertical_unique_pitch_count(t) = |U(t)|`
-
-Let `PC_edo(t)` be the set of active equal-tempered pitch classes under the selected EDO mapping.
-
-`vertical_pitch_class_cardinality(t) = |PC_edo(t)|`
-
-Interpretation of reductions:
-
-- `vertical_note_count` counts events with multiplicity.
-- `vertical_unique_pitch_count` collapses duplicate pitch units but preserves register.
-- `vertical_pitch_class_cardinality` collapses octave/register identity into the selected pitch-class universe.
-
-Containment statement:
-
-Under an aligned pitch-unit grid, where `bin_cents` is compatible with the selected EDO and pitch units refine or equal the EDO pitch-class grid, the usual relationship is:
+Under an aligned pitch-unit grid:
 
 `0 <= vertical_pitch_class_cardinality(t) <= vertical_unique_pitch_count(t) <= vertical_note_count(t)`
 
-This hierarchy is not guaranteed if `bin_cents` and `edo` are deliberately mismatched, because unique pitch units and pitch classes are then being counted on different quantisation grids.
+This hierarchy is not guaranteed if `bin_cents` and `edo` are deliberately mismatched.
 
-Ratio interpretation for nonzero denominators:
+Useful ratios (nonzero denominators only):
 
 - `unique_pitch_ratio(t) = vertical_unique_pitch_count(t) / vertical_note_count(t)`
 - `pc_coverage_ratio(t) = vertical_pitch_class_cardinality(t) / edo`
 - `pc_to_pitch_ratio(t) = vertical_pitch_class_cardinality(t) / vertical_unique_pitch_count(t)`
-
-`unique_pitch_ratio` measures how much event multiplicity survives after duplicate pitch units are collapsed.
-
-`pc_coverage_ratio` measures occupancy of the selected pitch-class universe.
-
-Under aligned quantisation, `pc_to_pitch_ratio` is a register-folding ratio: values near `1` indicate that most active pitch units occupy distinct pitch classes; lower values indicate more octave/register duplication of the same pitch classes. Do not compute or interpret ratio values with zero denominator.
 
 ## 2) Pitch conversion formulas
 
@@ -95,15 +69,13 @@ Implemented in `iav/vertical_cardinality.py` and mirrored in `src/textural_dimen
 
 ### 2.1 Pitch-space value
 
-For each `NoteTuple n = (step, alter, octave)`, the code computes pitch-space directly:
+For each `NoteTuple n = (step, alter, octave)`:
 
 - `ps(n) = 12 * (octave + 1) + step_to_semitone(step) + alter`
 
 where `step_to_semitone = {C:0, D:2, E:4, F:5, G:7, A:9, B:11}`.
 
 ### 2.2 Pitch unit quantization
-
-`bin_cents` is configurable (default `100` cents). The pitch unit is:
 
 - `cents(n) = 100 * ps(n)`
 - `unit(n) = round(cents(n) / bin_cents)`
@@ -112,30 +84,15 @@ For `bin_cents = 100`, this is semitone-quantized pitch-space binning.
 
 ### 2.3 Pitch-class cardinality and EDO grids
 
-The current implementation defines pitch-class cardinality over an equal-tempered pitch-class universe `Z_edo`.
-
-- `Z_edo = {0, 1, ..., edo - 1}`
-
-The default is 12-EDO. Common presets include 24-EDO and 48-EDO. Additional equal-tempered grids are available through `edo` and `bin_cents`.
-
-The pitch-class mapping is:
+Pitch-class cardinality is defined over `Z_edo = {0, 1, ..., edo - 1}`.
 
 - `pc_edo(n) = round(ps(n) * edo / 12) mod edo`
 
-where `ps(n)` is the symbolic pitch-space value.
-
-Consequences:
-
-1. The metric is not a just-intonation or spectral-harmony model.
-2. Off-grid or non-EDO tunings are quantised to the nearest active EDO grid when encountered.
-3. The metric should not be used as evidence of acoustic roughness, spectral density, psychoacoustic dissonance, or continuous microtonal diversity.
-4. Publications using this metric on microtonal repertoire should report active `edo`, `bin_cents`, tuning preset/provenance, and any warnings.
+Off-grid symbolic pitches are quantised to the nearest active grid and may appear in export `warnings`.
 
 ## 3) Event extraction from scores
 
 Implemented in `src/textural_dimension/analysis.py::_collect_events`.
-
-Given a score parsed by `music21.converter.parse`:
 
 1. Traverse `score.recurse().notes`.
 2. Convert local element time to score-global time with `getOffsetInHierarchy(score)`.
@@ -144,18 +101,37 @@ Given a score parsed by `music21.converter.parse`:
 5. Expand chords to multiple note tuples.
 6. Precompute per-event `units` and `pcs` under the active grid.
 
-Global offset conversion is essential for measure/voice-local alignment correctness.
-
-## 4) Time grid construction
+## 4) Time axis construction
 
 Implemented in `src/textural_dimension/analysis.py::_time_axis`.
 
-Given score duration `T` and step `Δ`:
+### 4.1 Instantaneous definition
 
-- `Δ = max(1e-6, time_step)`
-- `times = {0, Δ, 2Δ, ...}` while `t <= T + 1e-9`
+Vertical cardinality is a **point measure** at score time *t*. The active multiset `A(t)` is a **piecewise-constant step function** that changes only at event onsets and offsets.
+
+### 4.2 Event-boundary sampling (default)
+
+The time axis is the sorted union of:
+
+1. `0.0` and score duration `T`
+2. every event **onset** `offset`
+3. every event **offset** (release boundary) `end`
+4. optionally, a supplementary uniform grid `{0, Δ, 2Δ, …}` while `t <= T + 1e-9`, where `Δ = max(1e-6, time_step)`
 
 Each time point is rounded to 6 decimals for stable serialization.
+
+### 4.3 Sampling modes
+
+| `time_step` argument | `sampling` field | Behaviour |
+|---------------------|------------------|-----------|
+| positive float (default `0.25`) | `event_boundaries_with_uniform_grid` | exact boundaries + plotting grid |
+| `None` | `event_boundaries_only` | minimal exact curve |
+
+**Important:** `time_step` controls plot density, not detection completeness. Brief events shorter than `time_step` are captured because their onsets and offsets are always included.
+
+### 4.4 What this does not do
+
+This is not duration-weighted or window-aggregated density. A 0.01-beat event and a whole-bar chord both appear as instantaneous vertical states at their respective sample points.
 
 ## 5) Sweep-line cardinality algorithm
 
@@ -163,32 +139,34 @@ Implemented in `src/textural_dimension/analysis.py::_build_cardinality_series`.
 
 At each sampled time:
 
-1. Remove events whose `end` is before or at `t`.
-2. Add events whose `offset` is before or at `t`.
-3. Emit note count, unique pitch-unit count, and pitch-class cardinality.
+1. Remove events with `end + eps <= t`
+2. Add events with `offset <= t + eps`
+3. Emit note count, unique pitch-unit count, and pitch-class cardinality
 
-The implementation uses counters for active units and active pitch classes to avoid naive full rescans.
+Complexity: `O(E log E + W + K)` where `E` is events, `W` is sample times, and `K` is note payload processed during add/remove.
+
+With event-boundary sampling, `W = O(E)` in the minimal mode.
 
 ## 6) Summary-row fallback calculations
 
 Implemented in `iav/vertical_cardinality.py::vertical_cardinality_from_summary_row`.
 
-For direct-input summary rows:
+- `Notes` → `vertical_note_count`
+- `Unique pitches` → `vertical_unique_pitch_count` (fallback to notes if missing)
+- `PC cardinality` → used only when explicitly present
 
-- `Notes` is parsed as `vertical_note_count`.
-- `Unique pitches` is parsed as `vertical_unique_pitch_count` (fallback to notes if missing).
-- `PC cardinality` is used only when explicitly present.
-
-No inference of pitch-class cardinality from unique pitches is performed.
+No inference of pitch-class cardinality from unique-pitch counts is performed.
 
 ## 7) Output schema
 
 Analysis output includes:
 
-- `source_file`
-- `time_step`
+- `source_file_name`
+- `time_step` — supplementary grid step, or `null`
+- `sampling` — `event_boundaries_with_uniform_grid` or `event_boundaries_only`
 - `duration_quarters`
 - `event_count`
+- `sample_count`
 - `edo`
 - `pitch_class_universe`
 - `bin_cents`
@@ -200,9 +178,9 @@ Analysis output includes:
   - `vertical_unique_pitch_count`
   - `vertical_pitch_class_cardinality`
 
-CSV keeps metric column names unchanged. The current CSV writer prepends one metadata comment line:
+CSV keeps metric column names unchanged. A leading metadata comment line records sampling and tuning:
 
-- `# tuning: bin_cents=<...>, edo=<...>, preset=<...>, provenance=<...>`
+- `# sampling: event_boundaries_with_uniform_grid, time_step=0.25, sample_count=…, event_count=…; tuning: bin_cents=…, edo=…, preset=…, provenance=…`
 
 ## 8) Brief tutorial
 
@@ -210,18 +188,33 @@ CSV keeps metric column names unchanged. The current CSV writer prepends one met
 
 1. Run `python -m textural_dimension` (or `run.bat`).
 2. Upload a `MusicXML`, `MXL`, or `MIDI` file.
-3. Configure time step and optional tuning controls (`preset`, `bin_cents`, `edo`, auto-detect).
+3. Configure supplementary time step and optional tuning controls (`preset`, `bin_cents`, `edo`, auto-detect).
 4. Run analysis and export `CSV` / `JSON`.
 
 ### 8.2 CLI direct-input tutorial
-
-This mode does not parse score files. It computes/echoes cardinality from provided summary-row values.
 
 ```bash
 python -m textural_dimension --notes 4 --unique-pitches 3 --pc-cardinality 2 --edo 24
 ```
 
-## 9) References
+### 8.3 Programmatic score analysis
+
+```python
+from textural_dimension.analysis import analyze_vertical_cardinality
+
+analysis = analyze_vertical_cardinality("path/to/score.mxl")
+exact = analyze_vertical_cardinality("path/to/score.mxl", time_step=None)
+```
+
+## 9) Limitations for thesis reporting
+
+When citing results from this toolkit, state explicitly:
+
+1. **Metric scope:** cardinality-only symbolic descriptor; not a complete texture theory.
+2. **Temporal model:** instantaneous point measure at event boundaries (and optional supplementary grid points); not duration-weighted density.
+3. **Pitch model:** equal-tempered pitch units and EDO pitch classes; off-grid pitches are quantised and logged in metadata.
+4. **Perceptual boundary:** peaks in cardinality do not imply perceptual density, loudness, or orchestrational weight.
+
+## 10) References
 
 See `REFERENCES.md`.
-

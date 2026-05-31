@@ -12,6 +12,8 @@ Then run `~/.local/share/TexturalCardinality/launch-textural-cardinality.sh` or 
 
 Requires **Python 3.10 or 3.11** and **unzip** / **curl** (usually preinstalled).
 
+Analysis uses exact event-boundary temporal sampling; see `TECHNICAL_MANUAL.md` in the repository root.
+
 ## Cloned repository
 
 ```bash

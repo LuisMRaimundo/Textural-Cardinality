@@ -13,7 +13,7 @@ Textural cardinality should therefore be read as a reproducible symbolic descrip
 ## Features
 
 - Upload and analyze `MusicXML`, `MXL`, and `MIDI` files.
-- Compute vertical cardinality over time:
+- Compute vertical cardinality over time with **exact event-boundary sampling** (brief sonorities are not missed):
   - `vertical_note_count`
   - `vertical_unique_pitch_count`
   - `vertical_pitch_class_cardinality`, parameterised by the selected EDO grid.
@@ -21,11 +21,13 @@ Textural cardinality should therefore be read as a reproducible symbolic descrip
 - Switch between `Raw Counts` and `Normalized (0-1)` views.
 - Toggle a secondary axis for pitch-class cardinality visibility.
 - Configure equal-tempered tuning via presets, `bin_cents`, `edo`, and auto-detection.
-- Download analysis as `CSV` and `JSON` with tuning metadata.
+- Download analysis as `CSV` and `JSON` with sampling and tuning metadata.
 
 ## Scope and limitations
 
 This toolkit is cardinality-only. It measures symbolic vertical multiplicity and symbolic pitch/pitch-class diversity. It does not perform audio analysis and does not estimate acoustic density, spectral density, loudness, orchestral balance, psychoacoustic roughness, or perceived textural weight.
+
+**Temporal sampling.** Cardinality is defined instantaneously at score time *t* as the cardinality of the active symbolic note multiset *A(t)*. Because *A(t)* changes only at event onsets and offsets, the analysis **always samples at all such boundary times**, ensuring that even extremely brief vertical states are represented exactly. The configurable `time_step` adds a **supplementary uniform grid** for plotting convenience only; it does not control detection completeness.
 
 `vertical_pitch_class_cardinality` is parameterised by the active equal-tempered pitch-class universe. The default is 12-EDO. 24-EDO and 48-EDO are useful for quarter-tone and eighth-tone symbolic encodings when the score preserves those distinctions and when an equal-tempered reduction is analytically appropriate.
 
@@ -71,19 +73,43 @@ Example output:
 }
 ```
 
+## Programmatic API
+
+```python
+from textural_dimension.analysis import analyze_vertical_cardinality
+
+# Default: event boundaries + supplementary grid (time_step=0.25)
+result = analyze_vertical_cardinality("score.mxl")
+
+# Minimal exact curve: event boundaries only
+result = analyze_vertical_cardinality("score.mxl", time_step=None)
+```
+
+Key fields in the analysis result:
+
+| Field | Description |
+|-------|-------------|
+| `sampling` | `event_boundaries_with_uniform_grid` or `event_boundaries_only` |
+| `time_step` | Supplementary grid step, or `null` when omitted |
+| `sample_count` | Number of time points in `series` |
+| `event_count` | Number of extracted note/chord events |
+| `params.tuning` | Active `bin_cents`, `edo`, preset, and provenance |
+| `series` | Time-indexed cardinality rows |
+
 ## Analysis behavior
 
 - Uses score-global offsets (`getOffsetInHierarchy`) for temporal correctness.
 - Uses an incremental sweep-line engine for efficient dense-score processing.
-- Defaults to `time_step=0.25` quarter-length.
+- **Always includes every event onset and offset** in the analysis time axis.
+- Defaults to `time_step=0.25` quarter-length as a supplementary plotting grid (configurable in the UI; set to `None` in code for event-only sampling).
 - Uses symbolic equal-tempered quantisation grids (`bin_cents`, `edo`) and does not model acoustic tuning systems.
-- JSON includes active grid metadata (`edo`, `pitch_class_universe`, `bin_cents`, `params.tuning`) plus `warnings` when non-grid pitches are quantised.
-- CSV keeps the metric field names unchanged and currently includes a leading tuning metadata comment line.
+- JSON includes active grid metadata (`edo`, `pitch_class_universe`, `bin_cents`, `params.tuning`, `sampling`, `sample_count`) plus `warnings` when non-grid pitches are quantised.
+- CSV keeps metric column names unchanged and prepends a metadata comment line for sampling and tuning.
 
 ## Documentation
 
-- Technical manual (formulas, algorithms, and interpretation): `TECHNICAL_MANUAL.md`
-- Bibliographic references: `REFERENCES.md`
+- Technical manual (formulas, algorithms, and interpretation): [`TECHNICAL_MANUAL.md`](TECHNICAL_MANUAL.md)
+- Bibliographic references: [`REFERENCES.md`](REFERENCES.md)
 
 ## License
 
@@ -91,7 +117,7 @@ Copyright © 2026 Luís Raimundo and contributors. All rights reserved.
 
 ## Terms of use
 
-This software and its documentation are proprietary. No open-source licence is granted by this repository or by NOTICE.md. You may not copy, modify, merge, publish, distribute, sublicense, or sell copies of this software, or use it for commercial purposes, except as expressly permitted in writing by the copyright holder.
+This software and its documentation are proprietary. No open-source licence is granted by this repository or by [`NOTICE.md`](NOTICE.md). You may not copy, modify, merge, publish, distribute, sublicense, or sell copies of this software, or use it for commercial purposes, except as expressly permitted in writing by the copyright holder.
 
 Academic and research use may be permitted under separate agreement or institutional policy; when in doubt, contact the author before redistribution or derivative distribution.
 
@@ -99,7 +125,7 @@ Third-party components: runtime dependencies (e.g. Python packages listed in `py
 
 ## Contact
 
-For licensing enquiries, cite the repository maintainer listed in `CITATION.cff`.
+For licensing enquiries, cite the repository maintainer listed in [`CITATION.cff`](CITATION.cff).
 
 email: lmr.2020@outlook.pt
 

@@ -1,1 +1,1 @@
-"""Interval Analyser–compatible API paths used for summary-row cardinality rules."""
+"""Shared cardinality helpers for summary-row and slice-level calculations."""

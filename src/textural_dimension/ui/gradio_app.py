@@ -179,12 +179,12 @@ def run_cardinality_app(
     summary = (
         f"File: {analysis.get('source_file_name', 'unknown')}\n"
         f"Duration (quarters): {analysis['duration_quarters']:.3f}\n"
-        f"Time step: {analysis['time_step']}\n"
+        f"Time step (supplementary grid): {analysis['time_step']}\n"
+        f"Sampling: {analysis.get('sampling', 'n/a')}\n"
         f"EDO: {analysis.get('edo', 12)}\n"
         f"Pitch-class universe: {analysis.get('pitch_class_universe', 'Z12')}\n"
-        f"Tuning provenance: {analysis.get('params', {}).get('tuning', {}).get('tuning_provenance', 'n/a')}\n"
-        f"Events: {analysis.get('event_count', 'n/a')}\n"
-        f"Windows: {len(analysis['series'])}\n"
+        f"Tuning provenance: {analysis.get('params', {}).get('tuning', {}).get('tuning_provenance', 'n/a')}\n"        f"Events: {analysis.get('event_count', 'n/a')}\n"
+        f"Sample points: {analysis.get('sample_count', len(analysis['series']))}\n"
         f"Note Count min/max/mean: {min(note_values):.0f}/{max(note_values):.0f}/{statistics.fmean(note_values):.2f}\n"
         f"Unique Pitch min/max/mean: {min(unique_values):.0f}/{max(unique_values):.0f}/{statistics.fmean(unique_values):.2f}\n"
         f"PC Cardinality min/max/mean: {min(pc_values):.0f}/{max(pc_values):.0f}/{statistics.fmean(pc_values):.2f}"
@@ -203,11 +203,17 @@ def build_demo() -> gr.Blocks:
         gr.Markdown("# Textural cardinality")
         gr.Markdown(
             "Upload a MusicXML/MXL/MIDI score to compute symbolic vertical cardinality over time "
-            "using equal-tempered quantisation grids."
+            "using equal-tempered quantisation grids. Every event onset and offset is sampled "
+            "automatically, so brief sonorities are not missed. The time step adds a "
+            "supplementary plotting grid only."
         )
         file_in = gr.File(label="Score file (MusicXML / MXL / MIDI)")
         with gr.Row():
-            time_step_in = gr.Number(value=0.25, label="Time step (quarterLength)")
+            time_step_in = gr.Number(
+                value=0.25,
+                label="Supplementary time step (quarterLength)",
+                info="Adds uniform grid points for plotting. Event onsets/offsets are always included.",
+            )
             tuning_preset_in = gr.Dropdown(
                 choices=["(none)"] + sorted(TUNING_PRESETS.keys()),
                 value="(none)",
@@ -219,8 +225,7 @@ def build_demo() -> gr.Blocks:
                 value=DEFAULT_EDO,
                 label="Pitch-class universe (EDO)",
             )
-            auto_detect_in = gr.Checkbox(value=False, label="Auto-detect compatible symbolic grid from score")
-            view_mode_in = gr.Radio(
+            auto_detect_in = gr.Checkbox(value=False, label="Auto-detect compatible symbolic grid from score")            view_mode_in = gr.Radio(
                 choices=["Raw Counts", "Normalized (0-1)"],
                 value="Raw Counts",
                 label="Display mode",

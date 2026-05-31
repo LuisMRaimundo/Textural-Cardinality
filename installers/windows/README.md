@@ -7,6 +7,8 @@
 3. Wait until the window reports success (first run: **10–25 minutes**).
 4. Start the app from **Desktop** or **Start menu → Textural cardinality**.
 
+The application samples every event onset and offset automatically, so brief vertical states are not missed. See `TECHNICAL_MANUAL.md` in the repository root for details.
+
 Install location: `%LOCALAPPDATA%\Programs\TexturalCardinality\`  
 Log file: `install.log` in that folder.
 

@@ -6,14 +6,17 @@ type: software
 authors:
   - family-names: Raimundo
     given-names: Luís
-repository-code: 'https://github.com/LuisMRaimundo/Interval-Homogeneity-Analyser'
-url: 'https://github.com/LuisMRaimundo/Interval-Homogeneity-Analyser'
+repository-code: 'https://github.com/LuisMRaimundo/Textural-Cardinality'
+url: 'https://github.com/LuisMRaimundo/Textural-Cardinality'
 version: 1.0.0
 keywords:
   - vertical cardinality
   - symbolic music analysis
   - textural cardinality
+  - computational musicology
 license: Proprietary
 abstract: >-
   Cardinality-only symbolic toolkit with GUI and exports for vertical note count,
   unique pitch count, and pitch-class cardinality over time in notated scores.
+  Uses exact event-boundary temporal sampling so brief vertical states are not
+  missed between grid points.

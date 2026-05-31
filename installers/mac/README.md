@@ -12,6 +12,8 @@
 
 First run needs **Internet** and may take **10–25 minutes**.
 
+Analysis uses exact event-boundary temporal sampling; see `TECHNICAL_MANUAL.md` in the repository root.
+
 ## Cloned repository
 
 ```bash

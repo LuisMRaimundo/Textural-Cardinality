@@ -22,7 +22,7 @@ def test_collect_events_and_series_basics() -> None:
     assert len(events) == 2
     assert end_time == 2.0
 
-    times = _time_axis(end_time, 1.0)
+    times = _time_axis(end_time, 1.0, events)
     assert times == [0.0, 1.0, 2.0]
 
     # t=1.0 has C4 and E4 active together.
@@ -68,7 +68,7 @@ def test_sweepline_series_matches_naive_scan() -> None:
     score.insert(0.0, part)
 
     events, end_time = _collect_events(score)
-    times = _time_axis(end_time, 0.5)
+    times = _time_axis(end_time, 0.5, events)
 
     sweep = _build_cardinality_series(times, events)
 
@@ -105,7 +105,7 @@ def test_collect_events_supports_24_edo_pc_cardinality() -> None:
     score.insert(0.0, part)
 
     events, end_time = _collect_events(score, edo=24, bin_cents=50)
-    times = _time_axis(end_time, 1.0)
+    times = _time_axis(end_time, 1.0, events)
     series = _build_cardinality_series(times, events)
 
     assert series[0]["vertical_note_count"] == 2
@@ -124,8 +124,48 @@ def test_collect_events_supports_48_edo_pc_cardinality() -> None:
     score.insert(0.0, part)
 
     events, end_time = _collect_events(score, edo=48, bin_cents=25)
-    times = _time_axis(end_time, 1.0)
+    times = _time_axis(end_time, 1.0, events)
     series = _build_cardinality_series(times, events)
 
     assert series[0]["vertical_note_count"] == 3
     assert series[0]["vertical_pitch_class_cardinality"] == 3
+
+
+def test_time_axis_includes_event_boundaries() -> None:
+    score = Score()
+    part = Part()
+    part.insert(0.0, Note("C4", quarterLength=4.0))
+    grace = Note("E4", quarterLength=0.01)
+    grace.offset = 1.01
+    part.insert(1.01, grace)
+    score.insert(0.0, part)
+
+    events, end_time = _collect_events(score)
+    times = _time_axis(end_time, 1.0, events)
+
+    assert 1.01 in times
+    assert 1.02 in times
+
+
+def test_sub_step_grace_note_captured_on_event_axis() -> None:
+    score = Score()
+    part = Part()
+    part.insert(0.0, Note("C4", quarterLength=4.0))
+    grace = Note("E4", quarterLength=0.01)
+    grace.offset = 1.01
+    part.insert(1.01, grace)
+    score.insert(0.0, part)
+
+    events, end_time = _collect_events(score)
+
+    grid_only = _time_axis(end_time, 1.0, events=None)
+    event_axis = _time_axis(end_time, 1.0, events=events)
+
+    grid_series = _build_cardinality_series(grid_only, events)
+    event_series = _build_cardinality_series(event_axis, events)
+
+    assert max(r["vertical_note_count"] for r in grid_series) == 1
+    assert max(r["vertical_note_count"] for r in event_series) == 2
+
+    peak_rows = [r for r in event_series if r["vertical_note_count"] == 2]
+    assert any(abs(float(r["time_quarters"]) - 1.01) < 1e-6 for r in peak_rows)

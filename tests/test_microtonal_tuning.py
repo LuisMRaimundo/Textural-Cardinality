@@ -123,8 +123,9 @@ def test_tuning_recorded_in_export() -> None:
         csv_path = write_cardinality_csv(result)
         try:
             first_line = Path(csv_path).read_text(encoding="utf-8").splitlines()[0]
-            assert first_line.startswith("# tuning: ")
+            assert first_line.startswith("# sampling: ")
             assert "edo=24" in first_line
+            assert "tuning:" in first_line
         finally:
             Path(csv_path).unlink(missing_ok=True)
     finally:
