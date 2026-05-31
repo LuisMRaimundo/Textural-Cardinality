@@ -28,6 +28,13 @@ _EPS = 1e-9
 _TOL = 1e-6
 DEFAULT_BIN_CENTS = 100.0
 DEFAULT_EDO = 12
+REFERENCE_REGISTER_LOW = "A0"
+REFERENCE_REGISTER_HIGH = "C8"
+REFERENCE_PS_LOW = 21.0  # A0 in pitch-space (midi 21)
+REFERENCE_PS_HIGH = 108.0  # C8 in pitch-space (midi 108)
+REFERENCE_UNIVERSE_12TET = 88
+REFERENCE_UNIVERSE_QUARTER_TONE = 175
+MICRO_POLE_CARDINALITY = 1
 TUNING_PRESETS = {
     "12_edo": {"bin_cents": 100.0, "edo": 12},
     "24_edo": {"bin_cents": 50.0, "edo": 24},
@@ -91,6 +98,74 @@ def _pc_class(note: NoteTuple, *, edo: int = 12) -> int:
     return int(round(ps * float(edo) / 12.0)) % edo
 
 
+def _ps_in_reference_register(ps: float, tol: float = _TOL) -> bool:
+    return (REFERENCE_PS_LOW - tol) <= float(ps) <= (REFERENCE_PS_HIGH + tol)
+
+
+def _note_in_reference_register(note: NoteTuple, tol: float = _TOL) -> bool:
+    return _ps_in_reference_register(_midi_from_note_tuple(note), tol=tol)
+
+
+def reference_pitch_universe_size(bin_cents: float) -> int:
+    """Return the closed A0–C8 pitch-position count for the active grid."""
+    bin_cents = validate_bin_cents(bin_cents)
+    if abs(bin_cents - DEFAULT_BIN_CENTS) <= _TOL:
+        return REFERENCE_UNIVERSE_12TET
+    if abs(bin_cents - 50.0) <= _TOL:
+        return REFERENCE_UNIVERSE_QUARTER_TONE
+    span_cents = (REFERENCE_PS_HIGH - REFERENCE_PS_LOW) * 100.0
+    return int(round(span_cents / bin_cents)) + 1
+
+
+def micro_macro_normalized(cardinality: int, universe_size: int) -> float:
+    if universe_size <= 0:
+        return 0.0
+    return round(min(1.0, max(0.0, float(cardinality) / float(universe_size))), 6)
+
+
+def meso_pole_cardinality(universe_size: int) -> float:
+    """Arithmetic centre between micro (1) and macro (universe_size) poles."""
+    universe_size = int(universe_size)
+    if universe_size <= 0:
+        return 0.0
+    return (1.0 + float(universe_size)) / 2.0
+
+
+def micro_meso_macro_normalized(cardinality: int, universe_size: int) -> float:
+    """Map micro→0, meso centre→0.5, macro→1 on the closed A0–C8 cardinality span."""
+    universe_size = int(universe_size)
+    if universe_size <= 1:
+        return 0.0 if int(cardinality) <= 1 else 1.0
+    span = float(universe_size - 1)
+    return round(min(1.0, max(0.0, (float(cardinality) - 1.0) / span)), 6)
+
+
+def _ref_pitch_units(notes: list[NoteTuple], *, bin_cents: float) -> list[int]:
+    units: list[int] = []
+    for note in notes:
+        if _note_in_reference_register(note):
+            units.append(_pitch_unit(note, bin_cents=bin_cents))
+    return units
+
+
+def micro_macro_texture_params(bin_cents: float) -> dict[str, Any]:
+    universe_size = reference_pitch_universe_size(bin_cents)
+    meso_card = meso_pole_cardinality(universe_size)
+    return {
+        "reference_register": f"{REFERENCE_REGISTER_LOW}-{REFERENCE_REGISTER_HIGH}",
+        "reference_ps_low": REFERENCE_PS_LOW,
+        "reference_ps_high": REFERENCE_PS_HIGH,
+        "reference_pitch_universe_size": universe_size,
+        "micro_pole_cardinality": MICRO_POLE_CARDINALITY,
+        "meso_pole_cardinality": meso_card,
+        "macro_pole_cardinality": universe_size,
+        "texture_scale": "micro_meso_macro",
+        "micro_pole_normalized": 0.0,
+        "meso_pole_normalized": 0.5,
+        "macro_pole_normalized": 1.0,
+    }
+
+
 def _is_multiple_of_step(value: float, step: float, tol: float = _TOL) -> bool:
     nearest = round(value / step)
     return abs(value - nearest * step) <= tol
@@ -124,6 +199,7 @@ def _requantize_events(events: list[dict[str, Any]], *, bin_cents: float, edo: i
         pitches = ev["notes"]
         ev["units"] = [_pitch_unit(n, bin_cents=bin_cents) for n in pitches]
         ev["pcs"] = [_pc_class(n, edo=edo) for n in pitches]
+        ev["ref_units"] = _ref_pitch_units(pitches, bin_cents=bin_cents)
 
 
 def detect_tuning_grid(events: list[dict[str, Any]]) -> dict[str, Any]:
@@ -252,6 +328,7 @@ def _collect_events(
                 "notes": pitches,
                 "units": [_pitch_unit(n, bin_cents=bin_cents) for n in pitches],
                 "pcs": [_pc_class(n, edo=edo) for n in pitches],
+                "ref_units": _ref_pitch_units(pitches, bin_cents=bin_cents),
                 "raw_pitches": raw_pitches,
             }
         )
@@ -292,7 +369,12 @@ def _time_axis(
     return sorted(times)
 
 
-def _build_cardinality_series(times: list[float], events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _build_cardinality_series(
+    times: list[float],
+    events: list[dict[str, Any]],
+    *,
+    reference_universe_size: int,
+) -> list[dict[str, Any]]:
     if not times:
         return []
 
@@ -304,6 +386,7 @@ def _build_cardinality_series(times: list[float], events: list[dict[str, Any]]) 
     active_note_count = 0
     active_units: Counter[int] = Counter()
     active_pcs: Counter[int] = Counter()
+    active_ref_units: Counter[int] = Counter()
 
     series: list[dict[str, Any]] = []
     for t in times:
@@ -318,6 +401,10 @@ def _build_cardinality_series(times: list[float], events: list[dict[str, Any]]) 
                 active_pcs[pc] -= 1
                 if active_pcs[pc] <= 0:
                     del active_pcs[pc]
+            for unit in ev.get("ref_units", []):
+                active_ref_units[unit] -= 1
+                if active_ref_units[unit] <= 0:
+                    del active_ref_units[unit]
             ei += 1
 
         while si < len(starts) and float(starts[si]["offset"]) <= t + _EPS:
@@ -325,14 +412,21 @@ def _build_cardinality_series(times: list[float], events: list[dict[str, Any]]) 
             active_note_count += len(ev["notes"])
             active_units.update(ev["units"])
             active_pcs.update(ev["pcs"])
+            active_ref_units.update(ev.get("ref_units", []))
             si += 1
 
+        mm_card = len(active_ref_units)
         series.append(
             {
                 "time_quarters": t,
                 "vertical_note_count": int(active_note_count),
                 "vertical_unique_pitch_count": int(len(active_units)),
                 "vertical_pitch_class_cardinality": int(len(active_pcs)),
+                "micro_macro_pitch_cardinality": int(mm_card),
+                "micro_macro_normalized": micro_macro_normalized(mm_card, reference_universe_size),
+                "micro_meso_macro_normalized": micro_meso_macro_normalized(
+                    mm_card, reference_universe_size
+                ),
             }
         )
     return series
@@ -415,7 +509,8 @@ def analyze_vertical_cardinality(
         )
 
     times = _time_axis(end_time, time_step, events)
-    series = _build_cardinality_series(times, events)
+    ref_universe_size = reference_pitch_universe_size(active_bin_cents)
+    series = _build_cardinality_series(times, events, reference_universe_size=ref_universe_size)
     result: dict[str, Any] = {
         "source_file_name": Path(str(score_path)).name,
         "time_step": float(time_step) if time_step is not None else None,
@@ -432,6 +527,7 @@ def analyze_vertical_cardinality(
         "bin_cents": float(active_bin_cents),
         "warnings": warnings,
         "params": {
+            "micro_macro_texture": micro_macro_texture_params(active_bin_cents),
             "tuning": {
                 "bin_cents": float(active_bin_cents),
                 "edo": int(active_edo),
@@ -457,12 +553,18 @@ def write_cardinality_csv(analysis: dict[str, Any]) -> str:
         out_path = tf.name
     with open(out_path, "w", newline="", encoding="utf-8") as f:
         tuning = analysis.get("params", {}).get("tuning", {})
+        mm = analysis.get("params", {}).get("micro_macro_texture", {})
         f.write(
             "# sampling: "
             f"{analysis.get('sampling', 'n/a')}, "
             f"time_step={analysis.get('time_step')}, "
             f"sample_count={analysis.get('sample_count', len(analysis.get('series', [])))}, "
             f"event_count={analysis.get('event_count', 'n/a')}; "
+            f"micro_macro: register={mm.get('reference_register', 'A0-C8')}, "
+            f"universe_size={mm.get('reference_pitch_universe_size', 'n/a')}, "
+            f"poles=micro:{mm.get('micro_pole_cardinality', 1)}/"
+            f"meso:{mm.get('meso_pole_cardinality', 'n/a')}/"
+            f"macro:{mm.get('macro_pole_cardinality', 'n/a')}; "
             f"tuning: bin_cents={tuning.get('bin_cents', analysis.get('bin_cents'))}, "
             f"edo={tuning.get('edo', analysis.get('edo'))}, "
             f"preset={tuning.get('tuning_preset')}, "
@@ -475,6 +577,9 @@ def write_cardinality_csv(analysis: dict[str, Any]) -> str:
                 "vertical_note_count",
                 "vertical_unique_pitch_count",
                 "vertical_pitch_class_cardinality",
+                "micro_macro_pitch_cardinality",
+                "micro_macro_normalized",
+                "micro_meso_macro_normalized",
             ],
         )
         w.writeheader()

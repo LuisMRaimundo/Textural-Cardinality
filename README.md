@@ -4,7 +4,7 @@ Cardinality-only symbolic toolkit with a graphical interface for score upload, a
 
 ## Theoretical scope
 
-Textural cardinality is an author-defined operational construct. It denotes a family of score-derived, time-indexed cardinality descriptors for vertical symbolic texture. In this release, it measures active note-event count, distinct symbolic pitch-unit count, and equal-tempered pitch-class cardinality.
+Textural cardinality is an author-defined operational construct. It denotes a family of score-derived, time-indexed cardinality descriptors for vertical symbolic texture. In this release, it measures active note-event count, distinct symbolic pitch-unit count, equal-tempered pitch-class cardinality, and a **micro/macro textural index** aligned with thesis §4.3.6: distinct pitch positions within the reference register **A0–C8**, normalized against the closed reference universe (88 semitone positions at 100-cent bins, 175 quarter-tone positions at 50-cent bins).
 
 The construct is motivated by quantitative approaches to musical texture, especially approaches in which texture is partly described through the number of sounding components and their interrelations. It is narrower than a theory of texture. It does not model timbre, orchestration, register, spacing, density-compression, dynamics, articulation, stream segregation, perceptual salience, roughness, fusion, or formal function.
 
@@ -17,6 +17,9 @@ Textural cardinality should therefore be read as a reproducible symbolic descrip
   - `vertical_note_count`
   - `vertical_unique_pitch_count`
   - `vertical_pitch_class_cardinality`, parameterised by the selected EDO grid.
+  - `micro_macro_pitch_cardinality` — distinct pitch units in **A0–C8** only (notes outside the register are excluded).
+  - `micro_macro_normalized` — cardinality divided by the reference universe size (macro-referenced ratio).
+  - `micro_meso_macro_normalized` — three-pole scale **micro → meso → macro** mapped to **0.0 → 0.5 → 1.0** via `(cardinality − 1) / (universe_size − 1)`.
 - View results in an interactive Gradio interface with Plotly charts.
 - Switch between `Raw Counts` and `Normalized (0-1)` views.
 - Toggle a secondary axis for pitch-class cardinality visibility.
@@ -94,6 +97,7 @@ Key fields in the analysis result:
 | `sample_count` | Number of time points in `series` |
 | `event_count` | Number of extracted note/chord events |
 | `params.tuning` | Active `bin_cents`, `edo`, preset, and provenance |
+| `params.micro_macro_texture` | Reference register A0–C8, universe size (88/175), micro/meso/macro pole cardinalities |
 | `series` | Time-indexed cardinality rows |
 
 ## Analysis behavior

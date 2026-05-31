@@ -141,11 +141,45 @@ At each sampled time:
 
 1. Remove events with `end + eps <= t`
 2. Add events with `offset <= t + eps`
-3. Emit note count, unique pitch-unit count, and pitch-class cardinality
+3. Emit note count, unique pitch-unit count, pitch-class cardinality, and micro/macro fields (see §4.3.6)
 
 Complexity: `O(E log E + W + K)` where `E` is events, `W` is sample times, and `K` is note payload processed during add/remove.
 
 With event-boundary sampling, `W = O(E)` in the minimal mode.
+
+### 4.3.6 Micro/macro textural cardinality (thesis alignment)
+
+Implemented in `src/textural_dimension/analysis.py` (`reference_pitch_universe_size`, `micro_macro_normalized`, `_ref_pitch_units`).
+
+**Reference register:** closed pitch-space interval **A0–C8** (`ps` 21.0–108.0). Only active notes whose pitch-space lies in this interval contribute to the micro/macro count.
+
+**Reference universe size:**
+
+| `bin_cents` | Positions in A0–C8 |
+|-------------|-------------------|
+| 100 (12-TET semitones) | 88 |
+| 50 (quarter-tones) | 175 |
+| other | derived from register span ÷ bin size |
+
+**Metrics per series row:**
+
+- `micro_macro_pitch_cardinality` — count of distinct quantised pitch units among active notes in A0–C8.
+- `micro_macro_normalized` — `micro_macro_pitch_cardinality / reference_pitch_universe_size` (macro-referenced ratio).
+- `micro_meso_macro_normalized` — three-pole texture index on `[0, 1]`:
+
+  `(cardinality − 1) / (reference_pitch_universe_size − 1)`
+
+**Poles (cardinality and normalized):**
+
+| Pole | Cardinality (12-TET example) | `micro_meso_macro_normalized` |
+|------|------------------------------|----------------------------------|
+| **Micro** | 1 | 0.0 |
+| **Meso** | `(1 + universe_size) / 2` (44.5 for 88) | 0.5 |
+| **Macro** | full universe (88 or 175) | 1.0 |
+
+Metadata is exposed under `params.micro_macro_texture` (`reference_register`, `reference_pitch_universe_size`, `micro_pole_cardinality`, `meso_pole_cardinality`, `macro_pole_cardinality`, `meso_pole_normalized`).
+
+Auxiliary fields `vertical_note_count` and `vertical_unique_pitch_count` remain available but are not the thesis micro/macro construct.
 
 ## 6) Summary-row fallback calculations
 
@@ -171,16 +205,20 @@ Analysis output includes:
 - `pitch_class_universe`
 - `bin_cents`
 - `params.tuning`
+- `params.micro_macro_texture`
 - `warnings`
 - `series[]` rows containing:
   - `time_quarters`
   - `vertical_note_count`
   - `vertical_unique_pitch_count`
   - `vertical_pitch_class_cardinality`
+  - `micro_macro_pitch_cardinality`
+  - `micro_macro_normalized`
+  - `micro_meso_macro_normalized`
 
-CSV keeps metric column names unchanged. A leading metadata comment line records sampling and tuning:
+CSV keeps metric column names unchanged. A leading metadata comment line records sampling, tuning, and micro/macro register metadata:
 
-- `# sampling: event_boundaries_with_uniform_grid, time_step=0.25, sample_count=…, event_count=…; tuning: bin_cents=…, edo=…, preset=…, provenance=…`
+- `# sampling: …; tuning: …; micro_macro: register=A0-C8, universe_size=88; …`
 
 ## 8) Brief tutorial
 

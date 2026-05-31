@@ -1,12 +1,21 @@
 from __future__ import annotations
 
+from collections import Counter
+
 from music21.note import Note
 from music21.pitch import Pitch
 from music21.stream import Measure, Part, Score
 
-from textural_dimension.analysis import _build_cardinality_series, _collect_events, _time_axis
+from textural_dimension.analysis import (
+    REFERENCE_UNIVERSE_12TET,
+    REFERENCE_UNIVERSE_QUARTER_TONE,
+    _build_cardinality_series,
+    _collect_events,
+    _time_axis,
+    micro_macro_normalized,
+    micro_meso_macro_normalized,
+)
 from textural_dimension.cardinality import vertical_cardinality_for_notes
-
 
 def test_collect_events_and_series_basics() -> None:
     score = Score()
@@ -70,21 +79,29 @@ def test_sweepline_series_matches_naive_scan() -> None:
     events, end_time = _collect_events(score)
     times = _time_axis(end_time, 0.5, events)
 
-    sweep = _build_cardinality_series(times, events)
+    sweep = _build_cardinality_series(times, events, reference_universe_size=REFERENCE_UNIVERSE_12TET)
 
     naive = []
     for t in times:
         active_notes = []
+        ref_counter: Counter[int] = Counter()
         for ev in events:
             if ev["offset"] <= t < ev["end"] + 1e-9:
                 active_notes.extend(ev["notes"])
+                ref_counter.update(ev.get("ref_units", []))
         card = vertical_cardinality_for_notes(active_notes, bin_cents=100, edo=12)
+        mm_card = len(ref_counter)
         naive.append(
             {
                 "time_quarters": t,
                 "vertical_note_count": card["vertical_note_count"],
                 "vertical_unique_pitch_count": card["vertical_unique_pitch_count"],
                 "vertical_pitch_class_cardinality": card["vertical_pitch_class_cardinality"],
+                "micro_macro_pitch_cardinality": mm_card,
+                "micro_macro_normalized": micro_macro_normalized(mm_card, REFERENCE_UNIVERSE_12TET),
+                "micro_meso_macro_normalized": micro_meso_macro_normalized(
+                    mm_card, REFERENCE_UNIVERSE_12TET
+                ),
             }
         )
     assert sweep == naive
@@ -106,7 +123,7 @@ def test_collect_events_supports_24_edo_pc_cardinality() -> None:
 
     events, end_time = _collect_events(score, edo=24, bin_cents=50)
     times = _time_axis(end_time, 1.0, events)
-    series = _build_cardinality_series(times, events)
+    series = _build_cardinality_series(times, events, reference_universe_size=REFERENCE_UNIVERSE_QUARTER_TONE)
 
     assert series[0]["vertical_note_count"] == 2
     assert series[0]["vertical_pitch_class_cardinality"] == 2
@@ -125,7 +142,7 @@ def test_collect_events_supports_48_edo_pc_cardinality() -> None:
 
     events, end_time = _collect_events(score, edo=48, bin_cents=25)
     times = _time_axis(end_time, 1.0, events)
-    series = _build_cardinality_series(times, events)
+    series = _build_cardinality_series(times, events, reference_universe_size=REFERENCE_UNIVERSE_QUARTER_TONE)
 
     assert series[0]["vertical_note_count"] == 3
     assert series[0]["vertical_pitch_class_cardinality"] == 3
@@ -161,8 +178,8 @@ def test_sub_step_grace_note_captured_on_event_axis() -> None:
     grid_only = _time_axis(end_time, 1.0, events=None)
     event_axis = _time_axis(end_time, 1.0, events=events)
 
-    grid_series = _build_cardinality_series(grid_only, events)
-    event_series = _build_cardinality_series(event_axis, events)
+    grid_series = _build_cardinality_series(grid_only, events, reference_universe_size=REFERENCE_UNIVERSE_12TET)
+    event_series = _build_cardinality_series(event_axis, events, reference_universe_size=REFERENCE_UNIVERSE_12TET)
 
     assert max(r["vertical_note_count"] for r in grid_series) == 1
     assert max(r["vertical_note_count"] for r in event_series) == 2

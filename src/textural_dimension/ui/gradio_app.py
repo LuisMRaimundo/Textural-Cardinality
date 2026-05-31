@@ -48,6 +48,9 @@ def _build_plot(analysis: dict[str, Any], *, view_mode: str, pc_secondary_axis: 
         else 0.0
         for r in analysis["series"]
     ]
+    mm_raw = [float(r.get("micro_meso_macro_normalized") or 0.0) for r in analysis["series"]]
+    mm_macro_ratio = [float(r.get("micro_macro_normalized") or 0.0) for r in analysis["series"]]
+    mm_card = [float(r.get("micro_macro_pitch_cardinality") or 0) for r in analysis["series"]]
     is_normalized = view_mode == "Normalized (0-1)"
     if is_normalized:
         # Normalized traces share comparable scale; prefer single-axis view.
@@ -60,12 +63,18 @@ def _build_plot(analysis: dict[str, Any], *, view_mode: str, pc_secondary_axis: 
         vnc_plot = _normalize(vnc)
         vup_plot = _normalize(vup)
         vpc_plot = [v / float(edo) if edo > 0 else 0.0 for v in vpc_raw]
+        mm_plot = mm_raw
     else:
         vnc_plot = vnc
         vup_plot = vup
         vpc_plot = vpc_raw
+        mm_plot = mm_card
 
-    peak_idx = max(range(len(vnc_plot)), key=lambda i: vnc_plot[i]) if vnc_plot else 0
+    mm_params = analysis.get("params", {}).get("micro_macro_texture", {})
+    meso_card = float(mm_params.get("meso_pole_cardinality") or 0.0)
+    meso_y = 0.5 if is_normalized else meso_card
+
+    peak_idx = max(range(len(mm_plot)), key=lambda i: mm_plot[i]) if mm_plot else 0
 
     fig = go.Figure()
     fig.add_trace(
@@ -93,6 +102,29 @@ def _build_plot(analysis: dict[str, Any], *, view_mode: str, pc_secondary_axis: 
     fig.add_trace(
         go.Scatter(
             x=times,
+            y=mm_plot,
+            mode="lines+markers",
+            name="Micro–Meso–Macro (A0-C8)" if not is_normalized else "Micro–Meso–Macro (0–1)",
+            line={"color": "#8E44AD", "width": 3.0},
+            marker={"size": 6},
+            hovertemplate=(
+                "Time: %{x:.3f}<br>Micro–Meso–Macro: %{y}<extra></extra>"
+                if is_normalized
+                else "Time: %{x:.3f}<br>Distinct pitches (A0-C8): %{y}<extra></extra>"
+            ),
+        )
+    )
+    if times and meso_card > 0:
+        fig.add_hline(
+            y=meso_y,
+            line_dash="dash",
+            line_color="rgba(142, 68, 173, 0.45)",
+            annotation_text="Meso",
+            annotation_position="right",
+        )
+    fig.add_trace(
+        go.Scatter(
+            x=times,
             y=vpc_plot,
             mode="lines+markers",
             name=pc_label,
@@ -106,9 +138,9 @@ def _build_plot(analysis: dict[str, Any], *, view_mode: str, pc_secondary_axis: 
         fig.add_trace(
             go.Scatter(
                 x=[times[peak_idx]],
-                y=[vnc_plot[peak_idx]],
+                y=[mm_plot[peak_idx]],
                 mode="markers+text",
-                name="Peak Note Count",
+                name="Peak Micro/Macro",
                 text=["Peak"],
                 textposition="top center",
                 marker={"color": "#1B4F72", "size": 10, "symbol": "diamond"},
@@ -176,15 +208,33 @@ def run_cardinality_app(
     note_values = [float(r["vertical_note_count"] or 0) for r in analysis["series"]]
     unique_values = [float(r["vertical_unique_pitch_count"] or 0) for r in analysis["series"]]
     pc_values = [float(r["vertical_pitch_class_cardinality"] or 0) for r in analysis["series"]]
+    mm_values = [float(r.get("micro_meso_macro_normalized") or 0) for r in analysis["series"]]
+    mm_macro_ratio_values = [float(r.get("micro_macro_normalized") or 0) for r in analysis["series"]]
+    mm_card_values = [float(r.get("micro_macro_pitch_cardinality") or 0) for r in analysis["series"]]
+    mm_params = analysis.get("params", {}).get("micro_macro_texture", {})
     summary = (
         f"File: {analysis.get('source_file_name', 'unknown')}\n"
         f"Duration (quarters): {analysis['duration_quarters']:.3f}\n"
         f"Time step (supplementary grid): {analysis['time_step']}\n"
         f"Sampling: {analysis.get('sampling', 'n/a')}\n"
+        f"Reference register: {mm_params.get('reference_register', 'A0-C8')}\n"
+        f"Reference universe size: {mm_params.get('reference_pitch_universe_size', 'n/a')}\n"
+        f"Texture poles (cardinality): micro={mm_params.get('micro_pole_cardinality', 1)} / "
+        f"meso={mm_params.get('meso_pole_cardinality', 'n/a')} / "
+        f"macro={mm_params.get('macro_pole_cardinality', 'n/a')}\n"
+        f"Texture poles (normalized): micro=0.0 / meso=0.5 / macro=1.0\n"
         f"EDO: {analysis.get('edo', 12)}\n"
         f"Pitch-class universe: {analysis.get('pitch_class_universe', 'Z12')}\n"
-        f"Tuning provenance: {analysis.get('params', {}).get('tuning', {}).get('tuning_provenance', 'n/a')}\n"        f"Events: {analysis.get('event_count', 'n/a')}\n"
+        f"Tuning provenance: {analysis.get('params', {}).get('tuning', {}).get('tuning_provenance', 'n/a')}\n"
+        f"Events: {analysis.get('event_count', 'n/a')}\n"
         f"Sample points: {analysis.get('sample_count', len(analysis['series']))}\n"
+        f"Micro–Meso–Macro cardinality min/max/mean: "
+        f"{min(mm_card_values):.0f}/{max(mm_card_values):.0f}/{statistics.fmean(mm_card_values):.2f}\n"
+        f"Micro–Meso–Macro normalized min/max/mean: "
+        f"{min(mm_values):.3f}/{max(mm_values):.3f}/{statistics.fmean(mm_values):.3f}\n"
+        f"Macro-ratio normalized min/max/mean: "
+        f"{min(mm_macro_ratio_values):.3f}/{max(mm_macro_ratio_values):.3f}/"
+        f"{statistics.fmean(mm_macro_ratio_values):.3f}\n"
         f"Note Count min/max/mean: {min(note_values):.0f}/{max(note_values):.0f}/{statistics.fmean(note_values):.2f}\n"
         f"Unique Pitch min/max/mean: {min(unique_values):.0f}/{max(unique_values):.0f}/{statistics.fmean(unique_values):.2f}\n"
         f"PC Cardinality min/max/mean: {min(pc_values):.0f}/{max(pc_values):.0f}/{statistics.fmean(pc_values):.2f}"
@@ -225,7 +275,8 @@ def build_demo() -> gr.Blocks:
                 value=DEFAULT_EDO,
                 label="Pitch-class universe (EDO)",
             )
-            auto_detect_in = gr.Checkbox(value=False, label="Auto-detect compatible symbolic grid from score")            view_mode_in = gr.Radio(
+            auto_detect_in = gr.Checkbox(value=False, label="Auto-detect compatible symbolic grid from score")
+            view_mode_in = gr.Radio(
                 choices=["Raw Counts", "Normalized (0-1)"],
                 value="Raw Counts",
                 label="Display mode",
