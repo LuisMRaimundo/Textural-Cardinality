@@ -34,10 +34,10 @@ def test_collect_events_and_series_basics() -> None:
     times = _time_axis(end_time, 1.0, events)
     assert times == [0.0, 1.0, 2.0]
 
-    # t=1.0 has C4 and E4 active together.
+    # t=1.0 has C4 and E4 active together (half-open [onset, offset)).
     active = []
     for ev in events:
-        if ev["offset"] <= 1.0 < ev["end"] + 1e-9:
+        if ev["offset"] <= 1.0 < ev["end"]:
             active.extend(ev["notes"])
     card = vertical_cardinality_for_notes(active)
     assert card["vertical_note_count"] == 2
@@ -86,7 +86,8 @@ def test_sweepline_series_matches_naive_scan() -> None:
         active_notes = []
         ref_counter: Counter[int] = Counter()
         for ev in events:
-            if ev["offset"] <= t < ev["end"] + 1e-9:
+            # Half-open activity: a note is inactive at t == end.
+            if ev["offset"] <= t < ev["end"]:
                 active_notes.extend(ev["notes"])
                 ref_counter.update(ev.get("ref_units", []))
         card = vertical_cardinality_for_notes(active_notes, bin_cents=100, edo=12)

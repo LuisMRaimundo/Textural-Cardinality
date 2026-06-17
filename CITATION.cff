@@ -8,7 +8,7 @@ authors:
     given-names: Luís
 repository-code: 'https://github.com/LuisMRaimundo/Textural-Cardinality'
 url: 'https://github.com/LuisMRaimundo/Textural-Cardinality'
-version: 1.0.0
+version: 1.1.0
 keywords:
   - vertical cardinality
   - symbolic music analysis
