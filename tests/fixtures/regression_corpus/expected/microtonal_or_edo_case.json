@@ -1,0 +1,43 @@
+{
+  "event_count": 2,
+  "sample_count": 2,
+  "max_vertical_note_count": 2,
+  "max_vertical_unique_pitch_count": 2,
+  "max_vertical_pitch_class_cardinality": 2,
+  "edo": 24,
+  "bin_cents": 50.0,
+  "sampling": "event_boundaries_only",
+  "duration_quarters": 2.0,
+  "series": [
+    {
+      "time_quarters": 0.0,
+      "vertical_note_count": 2,
+      "vertical_unique_pitch_count": 2,
+      "vertical_pitch_class_cardinality": 2
+    },
+    {
+      "time_quarters": 2.0,
+      "vertical_note_count": 0,
+      "vertical_unique_pitch_count": 0,
+      "vertical_pitch_class_cardinality": 0
+    }
+  ],
+  "params": {
+    "temporal_semantics": {
+      "activity_interval": "half_open_onset_offset",
+      "active_predicate": "onset <= t < offset",
+      "tie_handling": "merge_tied_notes",
+      "tie_merge_applied": true,
+      "zero_duration_policy": "ignored_no_contribution"
+    },
+    "tuning": {
+      "bin_cents": 50.0,
+      "edo": 24,
+      "tuning_preset": "24_edo",
+      "tuning_provenance": "tuning_preset"
+    }
+  },
+  "analysis_options": {
+    "tuning_preset": "24_edo"
+  }
+}
