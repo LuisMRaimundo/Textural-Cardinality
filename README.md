@@ -30,7 +30,7 @@ Textural cardinality should therefore be read as a reproducible symbolic descrip
 
 This toolkit is cardinality-only. It measures symbolic vertical multiplicity and symbolic pitch/pitch-class diversity. It does not perform audio analysis and does not estimate acoustic density, spectral density, loudness, orchestral balance, psychoacoustic roughness, or perceived textural weight.
 
-**Temporal sampling.** Cardinality is defined instantaneously at score time *t* as the cardinality of the active symbolic note multiset *A(t)*. Because *A(t)* changes only at event onsets and offsets, the analysis **always samples at all such boundary times**, ensuring that even extremely brief vertical states are represented exactly. The configurable `time_step` adds a **supplementary uniform grid** for plotting convenience only; it does not control detection completeness.
+**Temporal sampling.** Cardinality is defined instantaneously at score time *t* as the cardinality of the active symbolic note multiset *A(t)*. Membership is **half-open** — an event is active iff `onset <= t < offset` — so an event ending exactly when another begins is **not** counted twice and no artificial cardinality spike appears at shared boundaries. **Tied notes are merged** into single sustained events before sampling (a tie start + continuation is one event, not repeated attacks). Because *A(t)* changes only at event onsets and offsets, the analysis **always samples at all such boundary times**, ensuring that even extremely brief vertical states are represented exactly. The configurable `time_step` adds a **supplementary uniform grid** for plotting convenience only; it does not control detection completeness.
 
 `vertical_pitch_class_cardinality` is parameterised by the active equal-tempered pitch-class universe. The default is 12-EDO. 24-EDO and 48-EDO are useful for quarter-tone and eighth-tone symbolic encodings when the score preserves those distinctions and when an equal-tempered reduction is analytically appropriate.
 
@@ -104,6 +104,9 @@ Key fields in the analysis result:
 
 - Uses score-global offsets (`getOffsetInHierarchy`) for temporal correctness.
 - Uses an incremental sweep-line engine for efficient dense-score processing.
+- **Merges tied notes** into single sustained events (`stripTies`, `matchByPitch=True`) before extraction: a tie start + continuation counts as one event, not repeated attacks; rearticulated untied notes stay distinct (`merge_ties=True` by default).
+- Uses **half-open activity intervals `[onset, offset)`**: a note is not active at its exact release instant, so an event ending exactly when another begins is not double-counted, and the final score-duration sample retains no ended events.
+- **Zero-duration events** contribute no cardinality (logged via a `zero_duration_events` info warning).
 - **Always includes every event onset and offset** in the analysis time axis.
 - Defaults to `time_step=0.25` quarter-length as a supplementary plotting grid (configurable in the UI; set to `None` in code for event-only sampling).
 - Uses symbolic equal-tempered quantisation grids (`bin_cents`, `edo`) and does not model acoustic tuning systems.

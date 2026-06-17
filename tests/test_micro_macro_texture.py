@@ -131,7 +131,8 @@ def test_sweep_ref_units_match_naive_counter() -> None:
     for t, row in zip(times, sweep):
         ref_counter: Counter[int] = Counter()
         for ev in events:
-            if ev["offset"] <= t < ev["end"] + 1e-9:
+            # Half-open activity: a note is inactive at t == end.
+            if ev["offset"] <= t < ev["end"]:
                 ref_counter.update(ev.get("ref_units", []))
         assert row["micro_macro_pitch_cardinality"] == len(ref_counter)
         assert row["micro_macro_normalized"] == micro_macro_normalized(len(ref_counter), REFERENCE_UNIVERSE_12TET)

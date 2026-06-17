@@ -34,6 +34,15 @@ A peak in `vertical_unique_pitch_count` means that more distinct symbolic pitch 
 
 A peak in `vertical_pitch_class_cardinality` means that more equal-tempered pitch classes are represented in the active pitch-class universe. It does not identify the set class, interval-class vector, harmonic function, tonal distance, or microtonal/intonational system beyond the selected EDO grid.
 
+### 0.5 Metric semantics note (temporal-semantics revision)
+
+This revision adopts two intentional, value-affecting temporal-semantics decisions, replacing the earlier release-inclusive behaviour:
+
+1. **Tie merging.** Tied note chains are merged into single sustained events before extraction (§3); a tie start + continuation no longer inflates `vertical_note_count` as repeated attacks. Rearticulated (untied) notes remain distinct.
+2. **Half-open activity.** Vertical activity uses the half-open interval `[onset, offset)`: a note is **inactive** at its exact release instant, so coincident `A.end == B.onset` events are not counted simultaneously, and the final `t == duration` sample retains no ended events (§4–§5).
+
+These change exported series values at shared boundaries and for tied/sustained passages. The active configuration is recorded per analysis under `params.temporal_semantics`. No changelog file exists in this repository; this note is the authoritative record of the change.
+
 ## 1) Data model and notation
 
 The core note primitive is:
@@ -41,7 +50,7 @@ The core note primitive is:
 - `NoteTuple = (step, alter, octave)`
 - Example: `("C", 1.0, 4)` = C-sharp 4.
 
-For a score-global time instant `t`, let `A(t)` be the multiset of active note events.
+For a score-global time instant `t`, let `A(t)` be the multiset of active note events. Activity is **half-open**: an event is active iff `onset <= t < offset`, and is **not** active at `t == offset`. Tied note chains are merged into one sustained event before extraction (§3), so a tie start + continuation is a single event rather than repeated attacks.
 
 ### 1.1 Core metrics
 
@@ -92,8 +101,9 @@ Off-grid symbolic pitches are quantised to the nearest active grid and may appea
 
 ## 3) Event extraction from scores
 
-Implemented in `src/textural_dimension/analysis.py::_collect_events`.
+Implemented in `src/textural_dimension/analysis.py` (`_merge_tied_notes`, then `_collect_events`).
 
+0. **Merge tied notes first.** `analyze_vertical_cardinality` calls music21 `stripTies(inPlace=False, matchByPitch=True)` after parsing and before extraction, so a tie start + continuation(s) becomes one sustained event spanning the union duration; rearticulated (untied) notes stay distinct. On `stripTies` failure the original score is used and a `tie_merge_failed` warning is emitted. (Pass `merge_ties=False` to disable; default is `True`.)
 1. Traverse `score.recurse().notes`.
 2. Convert local element time to score-global time with `getOffsetInHierarchy(score)`.
 3. Read duration in quarter lengths.
@@ -137,11 +147,14 @@ This is not duration-weighted or window-aggregated density. A 0.01-beat event an
 
 Implemented in `src/textural_dimension/analysis.py::_build_cardinality_series`.
 
-At each sampled time:
+At each sampled time (half-open `[onset, offset)` activity):
 
-1. Remove events with `end + eps <= t`
-2. Add events with `offset <= t + eps`
-3. Emit note count, unique pitch-unit count, pitch-class cardinality, and micro/macro fields (see §4.3.6)
+1. Remove events once `end <= t` — a note is **inactive** at `t == end`, so an event ending exactly when another begins is **not** double-counted (no artificial boundary spike), and the final `t == duration` sample retains no ended events.
+2. Add events with `offset <= t`
+3. **Zero-duration events** (`end == onset`) span an empty half-open interval and therefore contribute **no** cardinality (a `zero_duration_events` info warning is emitted when present).
+4. Emit note count, unique pitch-unit count, pitch-class cardinality, and micro/macro fields (see §4.3.6)
+
+(Implementation uses an `eps = 1e-9` float tolerance on the `<= t` comparisons; the intended predicate is `onset <= t < offset`.)
 
 Complexity: `O(E log E + W + K)` where `E` is events, `W` is sample times, and `K` is note payload processed during add/remove.
 
@@ -204,6 +217,7 @@ Analysis output includes:
 - `edo`
 - `pitch_class_universe`
 - `bin_cents`
+- `params.temporal_semantics` — `activity_interval` (`half_open_onset_offset`), `active_predicate` (`onset <= t < offset`), `tie_handling`, `tie_merge_applied`, `zero_duration_policy`
 - `params.tuning`
 - `params.micro_macro_texture`
 - `warnings`

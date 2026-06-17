@@ -390,8 +390,15 @@ def _build_cardinality_series(
 
     series: list[dict[str, Any]] = []
     for t in times:
-        while ei < len(ends) and float(ends[ei]["end"]) + _EPS <= t:
+        # Half-open activity semantics [onset, offset): a note is inactive at t == end,
+        # so it is removed once end <= t (no release-inclusive overlap spike at shared
+        # boundaries). Zero-duration events span an empty half-open interval and therefore
+        # contribute no vertical cardinality.
+        while ei < len(ends) and float(ends[ei]["end"]) <= t + _EPS:
             ev = ends[ei]
+            ei += 1
+            if (float(ev["end"]) - float(ev["offset"])) <= _EPS:
+                continue
             active_note_count -= len(ev["notes"])
             for unit in ev["units"]:
                 active_units[unit] -= 1
@@ -405,15 +412,16 @@ def _build_cardinality_series(
                 active_ref_units[unit] -= 1
                 if active_ref_units[unit] <= 0:
                     del active_ref_units[unit]
-            ei += 1
 
         while si < len(starts) and float(starts[si]["offset"]) <= t + _EPS:
             ev = starts[si]
+            si += 1
+            if (float(ev["end"]) - float(ev["offset"])) <= _EPS:
+                continue
             active_note_count += len(ev["notes"])
             active_units.update(ev["units"])
             active_pcs.update(ev["pcs"])
             active_ref_units.update(ev.get("ref_units", []))
-            si += 1
 
         mm_card = len(active_ref_units)
         series.append(
@@ -432,6 +440,25 @@ def _build_cardinality_series(
     return series
 
 
+def _merge_tied_notes(score: Score) -> tuple[Score, bool]:
+    """
+    Merge tied note chains into single sustained events before event extraction.
+
+    A tie start + continuation(s) becomes one event spanning the union duration via
+    music21 ``stripTies`` (``matchByPitch=True`` so chord-internal and pitch-matched ties
+    merge while untied members remain separate). Rearticulated (untied) notes are left
+    as distinct events. On any music21 failure the original score is returned with
+    ``ok=False`` so analysis can still proceed (and emit a ``tie_merge_failed`` warning).
+    """
+    try:
+        merged = score.stripTies(inPlace=False, matchByPitch=True)
+        if merged is None:
+            return score, False
+        return merged, True
+    except Exception:
+        return score, False
+
+
 def analyze_vertical_cardinality(
     score_path: str,
     *,
@@ -440,6 +467,7 @@ def analyze_vertical_cardinality(
     bin_cents: float = DEFAULT_BIN_CENTS,
     auto_detect_tuning: bool = False,
     tuning_preset: str | None = None,
+    merge_ties: bool = True,
     debug_export_internal_path: bool = False,
 ) -> dict[str, Any]:
     edo = validate_edo(edo)
@@ -448,6 +476,9 @@ def analyze_vertical_cardinality(
         raise ValueError(f"Unknown tuning_preset: {tuning_preset}")
 
     score = converter.parse(score_path)
+    tie_merge_ok = True
+    if merge_ties:
+        score, tie_merge_ok = _merge_tied_notes(score)
     events, end_time = _collect_events(score, edo=DEFAULT_EDO, bin_cents=DEFAULT_BIN_CENTS)
 
     explicit_params = (abs(bin_cents - DEFAULT_BIN_CENTS) > _TOL) or (edo != DEFAULT_EDO)
@@ -507,6 +538,34 @@ def analyze_vertical_cardinality(
                 },
             }
         )
+    if merge_ties and not tie_merge_ok:
+        warnings.append(
+            {
+                "code": "tie_merge_failed",
+                "severity": "warning",
+                "message": (
+                    "music21 stripTies could not merge tied notes for this score; "
+                    "tied continuations may be counted as separate events."
+                ),
+                "details": {},
+            }
+        )
+    n_zero_duration = sum(
+        1 for ev in events if (float(ev["end"]) - float(ev["offset"])) <= _EPS
+    )
+    if n_zero_duration:
+        warnings.append(
+            {
+                "code": "zero_duration_events",
+                "severity": "info",
+                "message": (
+                    "Zero-duration events (e.g. notated grace notes with no duration) "
+                    "contribute no vertical cardinality under half-open [onset, offset) "
+                    "activity semantics."
+                ),
+                "details": {"n_zero_duration_events": int(n_zero_duration)},
+            }
+        )
 
     times = _time_axis(end_time, time_step, events)
     ref_universe_size = reference_pitch_universe_size(active_bin_cents)
@@ -527,6 +586,13 @@ def analyze_vertical_cardinality(
         "bin_cents": float(active_bin_cents),
         "warnings": warnings,
         "params": {
+            "temporal_semantics": {
+                "activity_interval": "half_open_onset_offset",
+                "active_predicate": "onset <= t < offset",
+                "tie_handling": "merge_tied_notes" if merge_ties else "as_imported",
+                "tie_merge_applied": bool(merge_ties and tie_merge_ok),
+                "zero_duration_policy": "ignored_no_contribution",
+            },
             "micro_macro_texture": micro_macro_texture_params(active_bin_cents),
             "tuning": {
                 "bin_cents": float(active_bin_cents),
