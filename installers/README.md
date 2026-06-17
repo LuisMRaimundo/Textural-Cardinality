@@ -23,8 +23,9 @@ The first run may take **10–25 minutes** (download plus scientific packages). 
 
 ## Analysis features (installed application)
 
-- Symbolic vertical cardinality: note count, unique pitch count, pitch-class cardinality (12-EDO).
-- Exact temporal sampling at every event onset and offset (brief events are not missed).
+- Symbolic vertical cardinality: note count, unique pitch count, pitch-class cardinality (parameterised EDO grids; presets 12/24/48/19/31/53).
+- Micro/macro textural index (A0–C8 reference register) with CSV/JSON export.
+- Exact temporal sampling at every event onset and offset (brief events are not missed); tied notes merged; half-open `[onset, offset)` activity.
 - Configurable supplementary time step for plotting; CSV/JSON export.
 - See [`TECHNICAL_MANUAL.md`](../TECHNICAL_MANUAL.md) in the repository root for formulas and interpretation boundaries.
 

@@ -34,9 +34,9 @@ A peak in `vertical_unique_pitch_count` means that more distinct symbolic pitch 
 
 A peak in `vertical_pitch_class_cardinality` means that more equal-tempered pitch classes are represented in the active pitch-class universe. It does not identify the set class, interval-class vector, harmonic function, tonal distance, or microtonal/intonational system beyond the selected EDO grid.
 
-### 0.5 Metric semantics note (temporal-semantics revision)
+### 0.5 Metric semantics note (temporal-semantics revision, package 1.1.0)
 
-This revision adopts two intentional, value-affecting temporal-semantics decisions, replacing the earlier release-inclusive behaviour:
+Package version **1.1.0** (`pyproject.toml`, `CITATION.cff`) adopts two intentional, value-affecting temporal-semantics decisions, replacing the earlier release-inclusive behaviour:
 
 1. **Tie merging.** Tied note chains are merged into single sustained events before extraction (§3); a tie start + continuation no longer inflates `vertical_note_count` as repeated attacks. Rearticulated (untied) notes remain distinct.
 2. **Half-open activity.** Vertical activity uses the half-open interval `[onset, offset)`: a note is **inactive** at its exact release instant, so coincident `A.end == B.onset` events are not counted simultaneously, and the final `t == duration` sample retains no ended events (§4–§5).
@@ -103,11 +103,19 @@ Off-grid symbolic pitches are quantised to the nearest active grid and may appea
 
 Named presets include 12-, 24-, 48-, 19-, 31-, and 53-EDO (`TUNING_PRESETS` in `analysis.py`). Users may also supply explicit `bin_cents` and `edo` pairs.
 
+**Tuning selection precedence** in `analyze_vertical_cardinality` (and the Gradio callback, which calls it):
+
+1. **Explicit** `bin_cents` / `edo` when either differs from the 12-EDO defaults (`100.0`, `12`) — highest priority.
+2. Else **`tuning_preset`** when supplied (GUI: any choice other than `(none)`).
+3. Else **`auto_detect_tuning=True`**.
+4. Else **default 12-EDO** (`tuning_provenance = default_12_edo`).
+
 **Auto-detection** (`auto_detect_tuning=True`) inspects fractional pitch-space residues in extracted events:
 
 1. Fast paths for semitone (12-EDO), quarter-tone (24-EDO), and eighth-tone (48-EDO) grids.
-2. Otherwise, a scan over `edo ∈ [2, 240]` retains the **last** (highest) EDO whose step `12/edo` divides every observed fractional residue; `bin_cents` is then set to `1200/edo`. (Multiple compatible EDO values often exist; the scan does not stop at the first match.)
-3. If no grid fits within tolerance, the analysis falls back to 12-EDO and records `non_grid_pitches` in `warnings`.
+2. Intermediate candidates: third-tone (`36`-EDO, step `1/3` semitone, `bin_cents = 100/3`) and sixth-tone (`72`-EDO, step `1/6` semitone, `bin_cents = 100/6`).
+3. Otherwise, a scan over `edo ∈ [2, 240]` retains the **last** (highest) EDO whose step `12/edo` divides every observed fractional residue; `bin_cents` is then set to `1200/edo`. (Multiple compatible EDO values often exist; the scan does not stop at the first match.)
+4. If no grid fits within tolerance, the analysis falls back to 12-EDO and records `non_grid_pitches` in `warnings`.
 
 Because music21 pitch-space values are floating-point, auto-detection may land on a high compatible EDO divisor (e.g. 228 rather than 19) even when the score is musically 19-EDO. For 19-, 31-, or 53-EDO analyses, prefer `tuning_preset` or explicit `bin_cents`/`edo` over auto-detect when reproducibility matters.
 
@@ -128,12 +136,13 @@ Percussion-specific cardinality (unpitched instrument multiplicity, timbral laye
 Implemented in `src/textural_dimension/analysis.py` (`_merge_tied_notes`, then `_collect_events`).
 
 0. **Merge tied notes first.** `analyze_vertical_cardinality` calls music21 `stripTies(inPlace=False, matchByPitch=True)` after parsing and before extraction, so a tie start + continuation(s) becomes one sustained event spanning the union duration; rearticulated (untied) notes stay distinct. On `stripTies` failure the original score is used and a `tie_merge_failed` warning is emitted. (Pass `merge_ties=False` to disable; default is `True`.)
-1. Traverse `score.recurse().notes`.
-2. Convert local element time to score-global time with `getOffsetInHierarchy(score)`.
-3. Read duration in quarter lengths.
-4. Build active half-open intervals `[offset, end)`.
-5. Expand chords to multiple note tuples.
-6. Precompute per-event `units` and `pcs` under the active grid.
+1. Traverse `score.recurse().notes` (this iterator can include `Unpitched` elements; see §2.5).
+2. Retain only `Note` and `Chord` elements for which `_pitch_to_note_tuple` succeeds (definite `pitch.octave`). Chord members without octave are skipped; unpitched percussion never forms an event.
+3. Convert local element time to score-global time with `getOffsetInHierarchy(score)`.
+4. Read duration in quarter lengths; `end = offset + max(0, duration)`.
+5. Build active half-open intervals `[offset, end)`.
+6. Expand chords to multiple note tuples.
+7. Precompute per-event `units`, `pcs`, and `ref_units` under the active grid (recomputed after tuning selection via `_requantize_events`).
 
 ## 4) Time axis construction
 
@@ -174,7 +183,7 @@ Implemented in `src/textural_dimension/analysis.py::_build_cardinality_series`.
 At each sampled time (half-open `[onset, offset)` activity):
 
 1. Remove events once `end <= t` — a note is **inactive** at `t == end`, so an event ending exactly when another begins is **not** double-counted (no artificial boundary spike), and the final `t == duration` sample retains no ended events.
-2. Add events with `offset <= t`
+2. Add events with `offset <= t` (multiset counters track per-unit and per-pitch-class multiplicity; reported `vertical_unique_pitch_count` and `vertical_pitch_class_cardinality` are **distinct** unit/class counts: `len(active_units)`, `len(active_pcs)`).
 3. **Zero-duration events** (`end == onset`) span an empty half-open interval and therefore contribute **no** cardinality (a `zero_duration_events` info warning is emitted when present).
 4. Emit note count, unique pitch-unit count, pitch-class cardinality, and micro/macro fields (see §4.3.6)
 
@@ -196,7 +205,7 @@ Implemented in `src/textural_dimension/analysis.py` (`reference_pitch_universe_s
 |-------------|-------------------|
 | 100 (12-TET semitones) | 88 |
 | 50 (quarter-tones) | 175 |
-| other | derived from register span ÷ bin size |
+| other | `round((ps_high − ps_low) × 100 / bin_cents) + 1` with `ps_low = 21`, `ps_high = 108` |
 
 **Metrics per series row:**
 
@@ -214,19 +223,25 @@ Implemented in `src/textural_dimension/analysis.py` (`reference_pitch_universe_s
 | **Meso** | `(1 + universe_size) / 2` (44.5 for 88) | 0.5 |
 | **Macro** | full universe (88 or 175) | 1.0 |
 
-Metadata is exposed under `params.micro_macro_texture` (`reference_register`, `reference_pitch_universe_size`, `micro_pole_cardinality`, `meso_pole_cardinality`, `macro_pole_cardinality`, `meso_pole_normalized`).
+Metadata is exposed under `params.micro_macro_texture`: `reference_register`, `reference_ps_low`, `reference_ps_high`, `reference_pitch_universe_size`, `micro_pole_cardinality`, `meso_pole_cardinality`, `macro_pole_cardinality`, `texture_scale` (`micro_meso_macro`), `micro_pole_normalized` (0.0), `meso_pole_normalized` (0.5), `macro_pole_normalized` (1.0).
 
 Auxiliary fields `vertical_note_count` and `vertical_unique_pitch_count` remain available but are not the thesis micro/macro construct.
 
 ## 6) Summary-row fallback calculations
 
-Implemented in `iav/vertical_cardinality.py::vertical_cardinality_from_summary_row`.
+Implemented in `iav/vertical_cardinality.py::vertical_cardinality_from_summary_row` and exposed via the CLI direct-input path (`python -m textural_dimension --notes …`).
+
+**Direct-input mode does not parse a score.** It echoes or passes through explicitly supplied summary-row integers. `bin_cents` and `edo` are accepted for `_metadata.tuning` only; they do **not** recompute pitch-unit or pitch-class cardinality from note tuples in this path.
+
+Field mapping:
 
 - `Notes` → `vertical_note_count`
-- `Unique pitches` → `vertical_unique_pitch_count` (fallback to notes if missing)
-- `PC cardinality` → used only when explicitly present
+- `Unique pitches` → `vertical_unique_pitch_count` (falls back to `Notes` when missing)
+- `PC cardinality` → `vertical_pitch_class_cardinality` only when explicitly present (otherwise `null`)
 
 No inference of pitch-class cardinality from unique-pitch counts is performed.
+
+For slice-level recomputation from explicit `NoteTuple` sequences, use `vertical_cardinality_for_notes` (`textural_dimension.cardinality`).
 
 ## 7) Output schema
 
@@ -241,10 +256,13 @@ Analysis output includes:
 - `edo`
 - `pitch_class_universe`
 - `bin_cents`
-- `params.temporal_semantics` — `activity_interval` (`half_open_onset_offset`), `active_predicate` (`onset <= t < offset`), `tie_handling`, `tie_merge_applied`, `zero_duration_policy`
-- `params.tuning`
+- `params.temporal_semantics` — `activity_interval` (`half_open_onset_offset`), `active_predicate` (`onset <= t < offset`), `tie_handling` (`merge_tied_notes` or `as_imported`), `tie_merge_applied`, `zero_duration_policy` (`ignored_no_contribution`)
+- `params.tuning` — `bin_cents`, `edo`, `tuning_preset`, `tuning_provenance` (`default_12_edo`, `explicit_bin_cents_edo`, `tuning_preset`, `auto_detected`), `auto_detected_from_n_events`, `non_grid_pitches_count`, `non_grid_pitches_sample`
 - `params.micro_macro_texture`
-- `warnings`
+- `warnings` — list of objects with `code`, `severity`, `message`, `details`. Known codes:
+  - `non_grid_pitches` (warning) — pitches quantised to nearest grid
+  - `tie_merge_failed` (warning) — `stripTies` could not merge ties
+  - `zero_duration_events` (info) — zero-duration events contribute no cardinality
 - `series[]` rows containing:
   - `time_quarters`
   - `vertical_note_count`
@@ -266,10 +284,20 @@ CSV keeps metric column names unchanged. A leading metadata comment line records
 
 ### 8.1 GUI tutorial
 
-1. Run `python -m textural_dimension` (or `run.bat`).
+Implemented in `src/textural_dimension/ui/gradio_app.py` (`build_demo`, `run_cardinality_app`).
+
+1. Run `python -m textural_dimension` with no CLI arguments (or `run.bat`) — launches the Gradio interface.
 2. Upload a `MusicXML`, `MXL`, or `MIDI` file.
-3. Configure supplementary time step and optional tuning controls (`preset`, `bin_cents`, `edo`, auto-detect).
-4. Run analysis and export `CSV` / `JSON`.
+3. Configure:
+   - **Supplementary time step** (default `0.25` quarterLength)
+   - **Equal-tempered grid preset** — `(none)` or a named preset from `TUNING_PRESETS`
+   - **Bin size (cents)** and **EDO** radio (`12`, `19`, `24`, `31`, `48`, `53`, `72`; arbitrary EDO is available programmatically)
+   - **Auto-detect compatible symbolic grid**
+   - **Display mode** — `Raw Counts` or `Normalized (0-1)` (plot scaling only; exported CSV/JSON use raw analysis values)
+   - **Secondary axis for PC cardinality** (mainly for raw-count view)
+4. Run analysis and download `CSV` / `JSON`.
+
+The GUI always calls `analyze_vertical_cardinality` with default `merge_ties=True`. Plot normalisation (`_build_plot`) does not alter stored analysis series values.
 
 ### 8.2 CLI direct-input tutorial
 
@@ -285,6 +313,8 @@ from textural_dimension.analysis import analyze_vertical_cardinality
 analysis = analyze_vertical_cardinality("path/to/score.mxl")
 exact = analyze_vertical_cardinality("path/to/score.mxl", time_step=None)
 ```
+
+Optional keyword arguments: `time_step` (default `0.25`, or `None` for event-boundaries only), `edo`, `bin_cents`, `auto_detect_tuning`, `tuning_preset`, `merge_ties` (default `True`), `debug_export_internal_path`.
 
 ## 9) Limitations for thesis reporting
 

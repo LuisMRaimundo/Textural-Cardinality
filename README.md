@@ -1,5 +1,8 @@
 # Textural-Cardinality
 
+**Package version:** 1.1.0 (`pyproject.toml`, `CITATION.cff`)  
+**CI:** GitHub Actions — **87** tests (`pytest -m "not legacy"`). See [`.github/workflows/tests.yml`](.github/workflows/tests.yml).
+
 Cardinality-only symbolic toolkit with a graphical interface for score upload, analysis, and professional plotting.
 
 ## Theoretical scope
@@ -34,7 +37,7 @@ This toolkit is cardinality-only. It measures symbolic vertical multiplicity and
 
 `vertical_pitch_class_cardinality` is parameterised by the active equal-tempered pitch-class universe. The default is 12-EDO. 24-EDO and 48-EDO are useful for quarter-tone and eighth-tone symbolic encodings when the score preserves those distinctions and when an equal-tempered reduction is analytically appropriate.
 
-Non-EDO tunings, just-intonation ratios, spectral tuning fields, and continuous frequency-space models are not represented natively. Off-grid symbolic pitches are quantised to the nearest active grid in the current implementation and reported through `warnings` in JSON metadata. Named presets include 19-, 31-, and 53-EDO in addition to 12/24/48; arbitrary `bin_cents`/`edo` pairs are accepted. Auto-detection scans `edo ∈ [2, 240]` and keeps the **highest** compatible match (not the first), which can yield a finer grid than musically intended — use explicit presets for reproducible 19/31/53-EDO work.
+Non-EDO tunings, just-intonation ratios, spectral tuning fields, and continuous frequency-space models are not represented natively. Off-grid symbolic pitches are quantised to the nearest active grid in the current implementation and reported through `warnings` in JSON metadata. Named presets include 19-, 31-, and 53-EDO in addition to 12/24/48; arbitrary `bin_cents`/`edo` pairs are accepted. Tuning precedence is: explicit `bin_cents`/`edo` → `tuning_preset` → `auto_detect_tuning` → default 12-EDO. Auto-detection scans `edo ∈ [2, 240]` and keeps the **highest** compatible match (not the first), which can yield a finer grid than musically intended — use explicit presets for reproducible 19/31/53-EDO work.
 
 **Pitched events only.** The toolkit analyses symbolic notes and chords with definite pitch height. Unpitched percussion (`Unpitched` in MusicXML) is silently excluded from pitch-cardinality measures; scores with only unpitched material yield zero cardinality without error. Percussion-specific cardinality is not implemented.
 
@@ -54,7 +57,7 @@ or double-click `run.bat`.
 
 ## CLI direct-input mode
 
-This mode does not parse a score file. It computes or echoes cardinality fields from explicitly supplied summary-row values.
+This mode does not parse a score file. It echoes cardinality fields from explicitly supplied summary-row values (`Notes`, `Unique pitches`, optional `PC cardinality`). The `--bin-cents`, `--edo`, `--tuning-preset`, and `--auto-detect-tuning` flags populate `_metadata.tuning` only; they do not recompute counts from a score.
 
 ```bash
 python -m textural_dimension --notes 4 --unique-pitches 3 --pc-cardinality 2 --edo 24
@@ -98,8 +101,10 @@ Key fields in the analysis result:
 | `time_step` | Supplementary grid step, or `null` when omitted |
 | `sample_count` | Number of time points in `series` |
 | `event_count` | Number of extracted note/chord events |
-| `params.tuning` | Active `bin_cents`, `edo`, preset, and provenance |
+| `params.tuning` | Active `bin_cents`, `edo`, preset, provenance, and non-grid pitch audit fields |
+| `params.temporal_semantics` | Half-open activity, tie handling, zero-duration policy |
 | `params.micro_macro_texture` | Reference register A0–C8, universe size (88/175), micro/meso/macro pole cardinalities |
+| `warnings` | `non_grid_pitches`, `tie_merge_failed`, `zero_duration_events` when applicable |
 | `series` | Time-indexed cardinality rows |
 
 ## Analysis behavior
@@ -120,6 +125,7 @@ Key fields in the analysis result:
 
 - Technical manual (formulas, algorithms, and interpretation): [`TECHNICAL_MANUAL.md`](TECHNICAL_MANUAL.md)
 - Bibliographic references: [`REFERENCES.md`](REFERENCES.md)
+- One-click installers (optional): [`installers/`](installers/)
 
 ## License
 
