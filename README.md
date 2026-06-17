@@ -1,7 +1,7 @@
 # Textural-Cardinality
 
 **Package version:** 1.1.0 (`pyproject.toml`, `CITATION.cff`)  
-**CI:** GitHub Actions — **87** tests (`pytest -m "not legacy"`). See [`.github/workflows/tests.yml`](.github/workflows/tests.yml).
+**CI:** GitHub Actions — **123** tests on Python **3.10** and **3.11** (`python -m pytest tests -q`), with an **85%** coverage gate on `textural_dimension` and `iav`. See [`.github/workflows/tests.yml`](.github/workflows/tests.yml).
 
 Cardinality-only symbolic toolkit with a graphical interface for score upload, analysis, and professional plotting.
 
@@ -53,7 +53,44 @@ pip install -e ".[dev]"
 python -m textural_dimension
 ```
 
-or double-click `run.bat`.
+With **no CLI arguments**, this launches the Gradio interface (or double-click `run.bat` on Windows).
+
+## CLI entry routing
+
+`python -m textural_dimension` has three modes:
+
+| Invocation | Behaviour |
+|------------|-----------|
+| No arguments | Launch Gradio GUI |
+| `analyze-score …` | Headless score analysis → CSV/JSON export |
+| Any other flags (e.g. `--notes`) | Legacy direct-input mode (no score parsing) |
+
+## Headless score analysis (`analyze-score`)
+
+Parses a `MusicXML`, `MXL`, or `MIDI` file through `analyze_vertical_cardinality` and writes the same CSV/JSON exports as the GUI. Does not launch Gradio.
+
+```bash
+python -m textural_dimension analyze-score score.mxl \
+  --output-csv out.csv \
+  --output-json out.json
+```
+
+Options:
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--output-csv` | *(required)* | Destination CSV path |
+| `--output-json` | *(required)* | Destination JSON path |
+| `--time-step` | `0.25` | Supplementary uniform grid step in quarter lengths |
+| `--event-boundaries-only` | off | Event onsets/offsets only (`time_step=None`) |
+| `--bin-cents` | `100.0` | Pitch quantisation grid in cents |
+| `--edo` | `12` | Pitch-class universe size |
+| `--tuning-preset` | — | Named preset: `12_edo`, `19_edo`, `24_edo`, `31_edo`, `48_edo`, `53_edo` |
+| `--auto-detect-tuning` | off | Auto-detect compatible symbolic grid from score pitches |
+
+Tuning precedence matches the programmatic API (see **Analysis behavior** below): explicit `bin_cents`/`edo` when either differs from 12-EDO defaults → `tuning_preset` → `auto_detect_tuning` → default 12-EDO.
+
+On success, stdout prints `event_count`, `sample_count`, peak cardinalities, and output paths. Exit code `1` on missing file or analysis error.
 
 ## CLI direct-input mode
 
@@ -120,6 +157,17 @@ Key fields in the analysis result:
 - JSON includes active grid metadata (`edo`, `pitch_class_universe`, `bin_cents`, `params.tuning`, `params.temporal_semantics`, `sampling`, `sample_count`) plus `warnings` when non-grid pitches are quantised.
 - CSV keeps metric column names unchanged and prepends a metadata comment line for sampling and tuning.
 - Exported `series` rows contain count and micro/macro fields only; interpretive ratios (`unique_pitch_ratio`, `pc_coverage_ratio`, `pc_to_pitch_ratio`) are documented in the technical manual but are **not** written to CSV/JSON exports.
+
+## Testing and quality control
+
+Local verification (matches CI):
+
+```bash
+python -m pytest tests -q
+python -m pytest tests -q --cov=textural_dimension --cov=iav --cov-report=term-missing --cov-fail-under=85
+```
+
+**123 tests** across 12 modules, including temporal-semantics contracts, EDO/export contracts, unpitched policy, Gradio smoke tests (import/build/delegation only — no server launch in CI), analytical-musicological plausibility checks, headless `analyze-score` CLI tests, and a **micro-corpus regression fixture set** (`tests/fixtures/regression_corpus/`, 7 symbolic MusicXML scores with expected JSON snapshots). Regression fixtures protect output stability only; they are not a musical corpus claim and do not validate perception.
 
 ## Documentation
 
