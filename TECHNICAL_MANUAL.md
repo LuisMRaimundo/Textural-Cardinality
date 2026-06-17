@@ -66,7 +66,7 @@ Under an aligned pitch-unit grid:
 
 This hierarchy is not guaranteed if `bin_cents` and `edo` are deliberately mismatched.
 
-Useful ratios (nonzero denominators only):
+Useful **interpretive** ratios (nonzero denominators only). These are **not** written to CSV or JSON exports; they may be computed offline from exported count fields:
 
 - `unique_pitch_ratio(t) = vertical_unique_pitch_count(t) / vertical_note_count(t)`
 - `pc_coverage_ratio(t) = vertical_pitch_class_cardinality(t) / edo`
@@ -98,6 +98,30 @@ Pitch-class cardinality is defined over `Z_edo = {0, 1, ..., edo - 1}`.
 - `pc_edo(n) = round(ps(n) * edo / 12) mod edo`
 
 Off-grid symbolic pitches are quantised to the nearest active grid and may appear in export `warnings`.
+
+### 2.4 Arbitrary EDO grids and auto-detection
+
+Named presets include 12-, 24-, 48-, 19-, 31-, and 53-EDO (`TUNING_PRESETS` in `analysis.py`). Users may also supply explicit `bin_cents` and `edo` pairs.
+
+**Auto-detection** (`auto_detect_tuning=True`) inspects fractional pitch-space residues in extracted events:
+
+1. Fast paths for semitone (12-EDO), quarter-tone (24-EDO), and eighth-tone (48-EDO) grids.
+2. Otherwise, a scan over `edo ∈ [2, 240]` retains the **last** (highest) EDO whose step `12/edo` divides every observed fractional residue; `bin_cents` is then set to `1200/edo`. (Multiple compatible EDO values often exist; the scan does not stop at the first match.)
+3. If no grid fits within tolerance, the analysis falls back to 12-EDO and records `non_grid_pitches` in `warnings`.
+
+Because music21 pitch-space values are floating-point, auto-detection may land on a high compatible EDO divisor (e.g. 228 rather than 19) even when the score is musically 19-EDO. For 19-, 31-, or 53-EDO analyses, prefer `tuning_preset` or explicit `bin_cents`/`edo` over auto-detect when reproducibility matters.
+
+When `bin_cents` and `edo` are coherent (including preset pairs), `vertical_pitch_class_cardinality` is bounded by `edo` and the cardinality hierarchy in §1.2 holds. Deliberately mismatched `bin_cents`/`edo` pairs are accepted but may break that hierarchy.
+
+### 2.5 Unpitched and percussion events
+
+Textural-Cardinality analyses **pitched** symbolic events only. Event extraction traverses `score.recurse().notes` and retains elements only when a definite pitch with octave can be formed (`_pitch_to_note_tuple`).
+
+- `Note` and `Chord` members with valid pitch/octave are included.
+- `Unpitched` percussion (and any other note-like element without a definite pitched height) is **silently excluded** from `event_count` and from all pitch-cardinality measures.
+- Scores containing only unpitched events do not crash; they yield `event_count = 0` and zero-valued cardinality series.
+
+Percussion-specific cardinality (unpitched instrument multiplicity, timbral layer count, etc.) is **not** implemented in this release.
 
 ## 3) Event extraction from scores
 
@@ -234,6 +258,10 @@ CSV keeps metric column names unchanged. A leading metadata comment line records
 
 - `# sampling: …; tuning: …; micro_macro: register=A0-C8, universe_size=88; …`
 
+**Exported series fields** (CSV columns and JSON `series[]` rows): `time_quarters`, `vertical_note_count`, `vertical_unique_pitch_count`, `vertical_pitch_class_cardinality`, `micro_macro_pitch_cardinality`, `micro_macro_normalized`, `micro_meso_macro_normalized`.
+
+**Not exported:** interpretive ratios from §1.2 (`unique_pitch_ratio`, `pc_coverage_ratio`, `pc_to_pitch_ratio`). JSON additionally carries top-level metadata (`edo`, `bin_cents`, `params.temporal_semantics`, `params.tuning`, `params.micro_macro_texture`, `warnings`, etc.) but does not add ratio columns to `series[]`.
+
 ## 8) Brief tutorial
 
 ### 8.1 GUI tutorial
@@ -265,7 +293,8 @@ When citing results from this toolkit, state explicitly:
 1. **Metric scope:** cardinality-only symbolic descriptor; not a complete texture theory.
 2. **Temporal model:** instantaneous point measure at event boundaries (and optional supplementary grid points); not duration-weighted density.
 3. **Pitch model:** equal-tempered pitch units and EDO pitch classes; off-grid pitches are quantised and logged in metadata.
-4. **Perceptual boundary:** peaks in cardinality do not imply perceptual density, loudness, or orchestrational weight.
+4. **Pitched events only:** unpitched/percussion notation without definite pitch height is excluded; percussion cardinality is not implemented.
+5. **Perceptual boundary:** peaks in cardinality do not imply perceptual density, loudness, or orchestrational weight.
 
 ## 10) References
 

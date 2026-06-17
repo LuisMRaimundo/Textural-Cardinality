@@ -34,7 +34,9 @@ This toolkit is cardinality-only. It measures symbolic vertical multiplicity and
 
 `vertical_pitch_class_cardinality` is parameterised by the active equal-tempered pitch-class universe. The default is 12-EDO. 24-EDO and 48-EDO are useful for quarter-tone and eighth-tone symbolic encodings when the score preserves those distinctions and when an equal-tempered reduction is analytically appropriate.
 
-Non-EDO tunings, just-intonation ratios, spectral tuning fields, and continuous frequency-space models are not represented natively. Off-grid symbolic pitches are quantised to the nearest active grid in the current implementation and reported through `warnings` in JSON metadata.
+Non-EDO tunings, just-intonation ratios, spectral tuning fields, and continuous frequency-space models are not represented natively. Off-grid symbolic pitches are quantised to the nearest active grid in the current implementation and reported through `warnings` in JSON metadata. Named presets include 19-, 31-, and 53-EDO in addition to 12/24/48; arbitrary `bin_cents`/`edo` pairs are accepted. Auto-detection scans `edo ∈ [2, 240]` and keeps the **highest** compatible match (not the first), which can yield a finer grid than musically intended — use explicit presets for reproducible 19/31/53-EDO work.
+
+**Pitched events only.** The toolkit analyses symbolic notes and chords with definite pitch height. Unpitched percussion (`Unpitched` in MusicXML) is silently excluded from pitch-cardinality measures; scores with only unpitched material yield zero cardinality without error. Percussion-specific cardinality is not implemented.
 
 ## Installation
 
@@ -110,8 +112,9 @@ Key fields in the analysis result:
 - **Always includes every event onset and offset** in the analysis time axis.
 - Defaults to `time_step=0.25` quarter-length as a supplementary plotting grid (configurable in the UI; set to `None` in code for event-only sampling).
 - Uses symbolic equal-tempered quantisation grids (`bin_cents`, `edo`) and does not model acoustic tuning systems.
-- JSON includes active grid metadata (`edo`, `pitch_class_universe`, `bin_cents`, `params.tuning`, `sampling`, `sample_count`) plus `warnings` when non-grid pitches are quantised.
+- JSON includes active grid metadata (`edo`, `pitch_class_universe`, `bin_cents`, `params.tuning`, `params.temporal_semantics`, `sampling`, `sample_count`) plus `warnings` when non-grid pitches are quantised.
 - CSV keeps metric column names unchanged and prepends a metadata comment line for sampling and tuning.
+- Exported `series` rows contain count and micro/macro fields only; interpretive ratios (`unique_pitch_ratio`, `pc_coverage_ratio`, `pc_to_pitch_ratio`) are documented in the technical manual but are **not** written to CSV/JSON exports.
 
 ## Documentation
 
