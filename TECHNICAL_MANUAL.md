@@ -299,13 +299,31 @@ Implemented in `src/textural_dimension/ui/gradio_app.py` (`build_demo`, `run_car
 
 The GUI always calls `analyze_vertical_cardinality` with default `merge_ties=True`. Plot normalisation (`_build_plot`) does not alter stored analysis series values.
 
-### 8.2 CLI direct-input tutorial
+### 8.2 Headless score analysis (`analyze-score`)
+
+Implemented in `src/textural_dimension/__main__.py::run_analyze_score`.
+
+```bash
+python -m textural_dimension analyze-score path/to/score.mxl \
+  --output-csv out.csv \
+  --output-json out.json
+```
+
+Required: `--output-csv`, `--output-json`. Optional: `--time-step` (default `0.25`), `--event-boundaries-only` (sets `time_step=None`), `--bin-cents`, `--edo`, `--tuning-preset`, `--auto-detect-tuning`.
+
+Calls `analyze_vertical_cardinality` with default `merge_ties=True`, then `write_cardinality_csv` and `write_cardinality_json`. Does **not** launch Gradio. Exit code `0` on success, `1` on missing file, invalid `--time-step`, or analysis exception.
+
+Stdout summary fields: `event_count`, `sample_count`, `max vertical_note_count`, `max vertical_unique_pitch_count`, `max vertical_pitch_class_cardinality`, `output_csv`, `output_json`.
+
+CLI entry routing (`main`): no arguments → Gradio; first argument `analyze-score` → this path; otherwise → direct-input mode (§8.3).
+
+### 8.3 CLI direct-input tutorial
 
 ```bash
 python -m textural_dimension --notes 4 --unique-pitches 3 --pc-cardinality 2 --edo 24
 ```
 
-### 8.3 Programmatic score analysis
+### 8.4 Programmatic score analysis
 
 ```python
 from textural_dimension.analysis import analyze_vertical_cardinality
@@ -316,7 +334,48 @@ exact = analyze_vertical_cardinality("path/to/score.mxl", time_step=None)
 
 Optional keyword arguments: `time_step` (default `0.25`, or `None` for event-boundaries only), `edo`, `bin_cents`, `auto_detect_tuning`, `tuning_preset`, `merge_ties` (default `True`), `debug_export_internal_path`.
 
-## 9) Limitations for thesis reporting
+## 10) Verification, CI, and regression fixtures
+
+### 10.1 Test suite
+
+**123 tests** in `tests/` (12 modules). Representative groups:
+
+| Module | Tests | Scope |
+|--------|------:|-------|
+| `test_analysis` | 7 | Event extraction, sweep-line series, time axis |
+| `test_temporal_semantics_contract` | 10 | Tie merging, half-open `[onset, offset)`, zero-duration policy |
+| `test_edo_export_contracts` | 19 | EDO presets, auto-detect, CSV/JSON export schema |
+| `test_vertical_cardinality` / `test_microtonal_tuning` | 14 | Pitch-unit/PC cardinality, tuning metadata |
+| `test_micro_macro_texture` | 7 | A0–C8 reference register and normalisation |
+| `test_unpitched_policy` | 2 | Unpitched percussion exclusion |
+| `test_gradio_gui_smoke` | 11 | Import, `build_demo`, delegation — **no Gradio server launch in CI** |
+| `test_analytical_musicological_cardinality_plausibility` | 12 | Symbolic plausibility ordering (not perceptual validation) |
+| `test_cli_analyze_score` | 5 | Headless `analyze-score` CLI and legacy direct-input routing |
+| `test_regression_micro_corpus` | 31 | Micro-corpus fixture regression (see §10.3) |
+| `test_repository_hygiene` | 5 | Repository metadata and CLI smoke checks |
+
+### 10.2 Continuous integration
+
+GitHub Actions workflow **Tests** (`.github/workflows/tests.yml`):
+
+- Matrix: Python **3.10**, **3.11** (`fail-fast: false`)
+- Install: `pip install -e ".[dev]"` and `pytest-cov`
+- Full suite: `python -m pytest tests -q`
+- Coverage gate: `--cov=textural_dimension --cov=iav --cov-fail-under=85`
+
+Local coverage on a representative run is approximately **90%** total; the gate is set at **85%** to avoid brittle cross-environment failures.
+
+### 10.3 Micro-corpus regression fixtures
+
+`tests/fixtures/regression_corpus/` holds **7** synthetic symbolic MusicXML fixtures and matching expected JSON snapshots under `expected/`. Exercised by `tests/test_regression_micro_corpus.py`.
+
+Fixtures: `monophony`, `dyad`, `triad`, `chromatic_cluster`, `tied_sustain`, `shared_boundary`, `microtonal_or_edo_case` (analysed with explicit `24_edo` preset).
+
+Protected properties: fixture loading, scalar regression (`event_count`, `sample_count`, peak cardinalities), compact series rows, CLI/export parity with `analyze-score`, `params.temporal_semantics` in exports, ordering invariants, tie semantics, half-open boundary semantics, determinism, explicit 24-EDO path.
+
+These fixtures are **output-stability regression** only. They are not a representative musical corpus, not perceptual validation, and not acoustic analysis.
+
+## 11) Limitations for thesis reporting
 
 When citing results from this toolkit, state explicitly:
 
@@ -326,6 +385,6 @@ When citing results from this toolkit, state explicitly:
 4. **Pitched events only:** unpitched/percussion notation without definite pitch height is excluded; percussion cardinality is not implemented.
 5. **Perceptual boundary:** peaks in cardinality do not imply perceptual density, loudness, or orchestrational weight.
 
-## 10) References
+## 12) References
 
 See `REFERENCES.md`.

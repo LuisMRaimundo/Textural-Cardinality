@@ -16,7 +16,9 @@ keywords:
   - computational musicology
 license: Proprietary
 abstract: >-
-  Cardinality-only symbolic toolkit with GUI and exports for vertical note count,
-  unique pitch count, and pitch-class cardinality over time in notated scores.
-  Uses exact event-boundary temporal sampling so brief vertical states are not
-  missed between grid points.
+  Cardinality-only symbolic toolkit with Gradio GUI, headless analyze-score CLI,
+  and CSV/JSON exports for vertical note count, unique pitch count, and
+  pitch-class cardinality over time in notated scores. Uses exact
+  event-boundary temporal sampling so brief vertical states are not missed
+  between grid points. Tie merging and half-open [onset, offset) activity
+  semantics (package 1.1.0).

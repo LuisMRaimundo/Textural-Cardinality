@@ -1,7 +1,7 @@
 # Regression corpus fixtures
 
 Synthetic symbolic MusicXML scores used only for **output-stability regression** in
-`tests/test_regression_micro_corpus.py`.
+`tests/test_regression_micro_corpus.py` (31 tests; see `TECHNICAL_MANUAL.md` §10.3).
 
 - Fixtures are small, hand-curated or programmatically generated test scores — not a
   representative musical corpus and not a claim about repertoire.
