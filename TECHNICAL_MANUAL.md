@@ -131,6 +131,14 @@ Textural-Cardinality analyses **pitched** symbolic events only. Event extraction
 
 Percussion-specific cardinality (unpitched instrument multiplicity, timbral layer count, etc.) is **not** implemented in this release.
 
+### 2.6 `analysis.py` and `iav/vertical_cardinality.py` relationship
+
+Pitch-unit and pitch-class primitives (`_midi_from_note_tuple`, `_pitch_unit`, `_pc_class`, `validate_edo`, `_STEP_TO_SEMITONE`, `TUNING_PRESETS`) are **implemented in parallel** in `iav/vertical_cardinality.py` and `src/textural_dimension/analysis.py`. The score-wide pipeline (`_collect_events`, `_build_cardinality_series`, tuning auto-detect, micro/macro, exports) exists only in `analysis.py`.
+
+The public slice API `vertical_cardinality_for_notes` and summary-row pass-through `vertical_cardinality_from_summary_row` live in `iav/vertical_cardinality.py` and are re-exported through `textural_dimension.cardinality` (dynamic import of the local `iav` module). `analyze_vertical_cardinality` does **not** call `iav` at runtime; slice-level cardinality on a flat active-note list is mathematically equivalent to the sweep-line counters when half-open activity semantics apply (verified in tests).
+
+**Parity tests** (`tests/test_iav_analysis_pitch_parity.py`, 117 tests) guard constant drift, primitive identity, slice cardinality equivalence, extended sweep-line vs naive-iav scans (24/48/31-EDO), event precompute (`units`/`pcs`), and a lightweight max-cardinality check on the micro-corpus fixtures. These tests do not add analytical features; they document and lock current equivalence before any future deduplication refactor.
+
 ## 3) Event extraction from scores
 
 Implemented in `src/textural_dimension/analysis.py` (`_merge_tied_notes`, then `_collect_events`).
@@ -338,7 +346,7 @@ Optional keyword arguments: `time_step` (default `0.25`, or `None` for event-bou
 
 ### 10.1 Test suite
 
-**123 tests** in `tests/` (12 modules). Representative groups:
+**240 tests** in `tests/` (**13** modules). Representative groups:
 
 | Module | Tests | Scope |
 |--------|------:|-------|
@@ -352,6 +360,7 @@ Optional keyword arguments: `time_step` (default `0.25`, or `None` for event-bou
 | `test_analytical_musicological_cardinality_plausibility` | 12 | Symbolic plausibility ordering (not perceptual validation) |
 | `test_cli_analyze_score` | 5 | Headless `analyze-score` CLI and legacy direct-input routing |
 | `test_regression_micro_corpus` | 31 | Micro-corpus fixture regression (see §10.3) |
+| `test_iav_analysis_pitch_parity` | 117 | `analysis.py` vs `iav` pitch-primitive parity (see §10.4) |
 | `test_repository_hygiene` | 5 | Repository metadata and CLI smoke checks |
 
 ### 10.2 Continuous integration
@@ -363,7 +372,7 @@ GitHub Actions workflow **Tests** (`.github/workflows/tests.yml`):
 - Full suite: `python -m pytest tests -q`
 - Coverage gate: `--cov=textural_dimension --cov=iav --cov-fail-under=85`
 
-Local coverage on a representative run is approximately **90%** total; the gate is set at **85%** to avoid brittle cross-environment failures.
+Local coverage on a representative run is approximately **90.4%** total (`textural_dimension` + `iav`); the gate is set at **85%** to avoid brittle cross-environment failures.
 
 ### 10.3 Micro-corpus regression fixtures
 
@@ -374,6 +383,20 @@ Fixtures: `monophony`, `dyad`, `triad`, `chromatic_cluster`, `tied_sustain`, `sh
 Protected properties: fixture loading, scalar regression (`event_count`, `sample_count`, peak cardinalities), compact series rows, CLI/export parity with `analyze-score`, `params.temporal_semantics` in exports, ordering invariants, tie semantics, half-open boundary semantics, determinism, explicit 24-EDO path.
 
 These fixtures are **output-stability regression** only. They are not a representative musical corpus, not perceptual validation, and not acoustic analysis.
+
+### 10.4 `analysis.py` / `iav` pitch-primitive parity
+
+`tests/test_iav_analysis_pitch_parity.py` (**117** tests) verifies that duplicated pitch/cardinality primitives in `analysis.py` and `iav/vertical_cardinality.py` currently agree for comparable inputs. Covered areas:
+
+- `_STEP_TO_SEMITONE` and `TUNING_PRESETS` constant parity (drift guard)
+- `validate_edo` accept/reject behaviour
+- `_midi_from_note_tuple`, `_pitch_unit`, `_pc_class` across representative `NoteTuple`s, `bin_cents`, and EDO grids
+- slice cardinality equivalence vs `vertical_cardinality_for_notes`
+- sweep-line series vs naive half-open scan using `vertical_cardinality_for_notes` at 24-, 48-, and 31-EDO (extends the existing 12-EDO check in `test_analysis.py`)
+- `_collect_events` precomputed `units`/`pcs` vs both primitive implementations
+- lightweight max-cardinality guard on all seven micro-corpus fixtures
+
+This layer is **software validation only**. It does not extend metrics, temporal semantics, or analytical scope.
 
 ## 11) Limitations for thesis reporting
 
