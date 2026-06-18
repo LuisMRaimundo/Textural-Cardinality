@@ -3,8 +3,10 @@
 Synthetic symbolic MusicXML scores used only for **output-stability regression** in
 `tests/test_regression_micro_corpus.py` (31 tests; see `TECHNICAL_MANUAL.md` §10.3).
 
-Pitch-primitive parity between `analysis.py` and `iav/vertical_cardinality.py` is
-tested separately in `tests/test_iav_analysis_pitch_parity.py` (117 tests; see
+Pitch-primitive parity across the shared `src/textural_dimension/pitch_grid.py` module,
+`analysis.py`, and `iav/vertical_cardinality.py` is tested in
+`tests/test_pitch_grid_shared_primitives.py` (4 tests) and
+`tests/test_iav_analysis_pitch_parity.py` (117 tests; see
 `TECHNICAL_MANUAL.md` §10.4), including a lightweight max-cardinality guard on these
 fixtures.
 
