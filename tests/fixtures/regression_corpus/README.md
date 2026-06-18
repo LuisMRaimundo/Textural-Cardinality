@@ -3,6 +3,11 @@
 Synthetic symbolic MusicXML scores used only for **output-stability regression** in
 `tests/test_regression_micro_corpus.py` (31 tests; see `TECHNICAL_MANUAL.md` §10.3).
 
+Pitch-primitive parity between `analysis.py` and `iav/vertical_cardinality.py` is
+tested separately in `tests/test_iav_analysis_pitch_parity.py` (117 tests; see
+`TECHNICAL_MANUAL.md` §10.4), including a lightweight max-cardinality guard on these
+fixtures.
+
 - Fixtures are small, hand-curated or programmatically generated test scores — not a
   representative musical corpus and not a claim about repertoire.
 - They do **not** validate perception, acoustics, or musicological interpretation.

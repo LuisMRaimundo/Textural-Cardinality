@@ -21,4 +21,6 @@ abstract: >-
   pitch-class cardinality over time in notated scores. Uses exact
   event-boundary temporal sampling so brief vertical states are not missed
   between grid points. Tie merging and half-open [onset, offset) activity
-  semantics (package 1.1.0).
+  semantics (package 1.1.0). Software validation includes micro-corpus
+  regression fixtures and iav/analysis pitch-primitive parity tests; these
+  do not constitute perceptual or corpus-based musicological validation.

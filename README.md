@@ -1,7 +1,7 @@
 # Textural-Cardinality
 
 **Package version:** 1.1.0 (`pyproject.toml`, `CITATION.cff`)  
-**CI:** GitHub Actions — **123** tests on Python **3.10** and **3.11** (`python -m pytest tests -q`), with an **85%** coverage gate on `textural_dimension` and `iav`. See [`.github/workflows/tests.yml`](.github/workflows/tests.yml).
+**CI:** GitHub Actions — **240** tests on Python **3.10** and **3.11** (`python -m pytest tests -q`), with an **85%** coverage gate on `textural_dimension` and `iav` (local total coverage approximately **90.4%**). See [`.github/workflows/tests.yml`](.github/workflows/tests.yml).
 
 Cardinality-only symbolic toolkit with a graphical interface for score upload, analysis, and professional plotting.
 
@@ -90,7 +90,7 @@ Options:
 
 Tuning precedence matches the programmatic API (see **Analysis behavior** below): explicit `bin_cents`/`edo` when either differs from 12-EDO defaults → `tuning_preset` → `auto_detect_tuning` → default 12-EDO.
 
-On success, stdout prints `event_count`, `sample_count`, peak cardinalities, and output paths. Exit code `1` on missing file or analysis error.
+On success, stdout prints `event_count`, `sample_count`, `max vertical_note_count`, `max vertical_unique_pitch_count`, `max vertical_pitch_class_cardinality`, `output_csv`, and `output_json`. Exit code `0` on success; `1` on missing file, non-positive `--time-step` (without `--event-boundaries-only`), or analysis exception.
 
 ## CLI direct-input mode
 
@@ -167,7 +167,7 @@ python -m pytest tests -q
 python -m pytest tests -q --cov=textural_dimension --cov=iav --cov-report=term-missing --cov-fail-under=85
 ```
 
-**123 tests** across 12 modules, including temporal-semantics contracts, EDO/export contracts, unpitched policy, Gradio smoke tests (import/build/delegation only — no server launch in CI), analytical-musicological plausibility checks, headless `analyze-score` CLI tests, and a **micro-corpus regression fixture set** (`tests/fixtures/regression_corpus/`, 7 symbolic MusicXML scores with expected JSON snapshots). Regression fixtures protect output stability only; they are not a musical corpus claim and do not validate perception.
+**240 tests** across **13** modules, including temporal-semantics contracts, EDO/export contracts, unpitched policy, Gradio smoke tests (import/build/delegation only — no server launch in CI), analytical-musicological plausibility checks (not perceptual validation), headless `analyze-score` CLI tests, a **micro-corpus regression fixture set** (`tests/fixtures/regression_corpus/`, 7 symbolic MusicXML scores with expected JSON snapshots), and **iav/analysis pitch-primitive parity tests** (`tests/test_iav_analysis_pitch_parity.py`, 117 tests). Regression fixtures and parity tests are software-validation guards only; they are not a musical corpus claim and do not validate perception or acoustics.
 
 ## Documentation
 
