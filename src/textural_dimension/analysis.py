@@ -23,7 +23,17 @@ from music21.note import Note
 from music21.pitch import Pitch
 from music21.stream import Score
 
-NoteTuple = tuple[str, float, int]
+from textural_dimension.pitch_grid import (
+    NoteTuple,
+    TUNING_PRESETS,
+    _STEP_TO_SEMITONE,
+    _midi_from_note_tuple,
+    _nearest_int,
+    _pc_class,
+    _pitch_unit,
+    validate_edo,
+)
+
 _EPS = 1e-9
 _TOL = 1e-6
 DEFAULT_BIN_CENTS = 100.0
@@ -35,30 +45,6 @@ REFERENCE_PS_HIGH = 108.0  # C8 in pitch-space (midi 108)
 REFERENCE_UNIVERSE_12TET = 88
 REFERENCE_UNIVERSE_QUARTER_TONE = 175
 MICRO_POLE_CARDINALITY = 1
-TUNING_PRESETS = {
-    "12_edo": {"bin_cents": 100.0, "edo": 12},
-    "24_edo": {"bin_cents": 50.0, "edo": 24},
-    "48_edo": {"bin_cents": 25.0, "edo": 48},
-    "31_edo": {"bin_cents": 38.70967741935484, "edo": 31},
-    "19_edo": {"bin_cents": 63.15789473684211, "edo": 19},
-    "53_edo": {"bin_cents": 22.641509433962263, "edo": 53},
-}
-_STEP_TO_SEMITONE = {
-    "C": 0.0,
-    "D": 2.0,
-    "E": 4.0,
-    "F": 5.0,
-    "G": 7.0,
-    "A": 9.0,
-    "B": 11.0,
-}
-
-
-def validate_edo(edo: int) -> int:
-    edo = int(edo)
-    if edo <= 0:
-        raise ValueError("edo must be a positive integer")
-    return edo
 
 
 def validate_bin_cents(bin_cents: float) -> float:
@@ -66,10 +52,6 @@ def validate_bin_cents(bin_cents: float) -> float:
     if bin_cents <= 0:
         raise ValueError("bin_cents must be > 0")
     return bin_cents
-
-
-def _nearest_int(x: float) -> int:
-    return int(math.floor(float(x) + 0.5 + 1e-9))
 
 
 def _pitch_to_note_tuple(p: Pitch) -> NoteTuple | None:
@@ -80,22 +62,6 @@ def _pitch_to_note_tuple(p: Pitch) -> NoteTuple | None:
     base_ps = 12.0 * (octave + 1) + _STEP_TO_SEMITONE[step]
     alter = float(p.ps) - base_ps
     return (step, alter, octave)
-
-
-def _midi_from_note_tuple(note: NoteTuple) -> float:
-    step, alter, octave = note[0], float(note[1]), int(note[2])
-    return 12.0 * (octave + 1) + _STEP_TO_SEMITONE[step.upper()] + alter
-
-
-def _pitch_unit(note: NoteTuple, *, bin_cents: float) -> int:
-    cents = _midi_from_note_tuple(note) * 100.0
-    return int(round(cents / float(bin_cents)))
-
-
-def _pc_class(note: NoteTuple, *, edo: int = 12) -> int:
-    edo = validate_edo(edo)
-    ps = _midi_from_note_tuple(note)
-    return int(round(ps * float(edo) / 12.0)) % edo
 
 
 def _ps_in_reference_register(ps: float, tol: float = _TOL) -> bool:
