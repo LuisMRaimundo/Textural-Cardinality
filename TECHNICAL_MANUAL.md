@@ -74,7 +74,7 @@ Useful **interpretive** ratios (nonzero denominators only). These are **not** wr
 
 ## 2) Pitch conversion formulas
 
-Implemented in `iav/vertical_cardinality.py` and mirrored in `src/textural_dimension/analysis.py`.
+Implemented in `src/textural_dimension/pitch_grid.py` (canonical definitions). `iav/vertical_cardinality.py` and `src/textural_dimension/analysis.py` import and re-export these primitives for backward-compatible import paths.
 
 ### 2.1 Pitch-space value
 
@@ -101,7 +101,7 @@ Off-grid symbolic pitches are quantised to the nearest active grid and may appea
 
 ### 2.4 Arbitrary EDO grids and auto-detection
 
-Named presets include 12-, 24-, 48-, 19-, 31-, and 53-EDO (`TUNING_PRESETS` in `analysis.py`). Users may also supply explicit `bin_cents` and `edo` pairs.
+Named presets include 12-, 24-, 48-, 19-, 31-, and 53-EDO (`TUNING_PRESETS` in `pitch_grid.py`). Users may also supply explicit `bin_cents` and `edo` pairs.
 
 **Tuning selection precedence** in `analyze_vertical_cardinality` (and the Gradio callback, which calls it):
 
@@ -131,13 +131,13 @@ Textural-Cardinality analyses **pitched** symbolic events only. Event extraction
 
 Percussion-specific cardinality (unpitched instrument multiplicity, timbral layer count, etc.) is **not** implemented in this release.
 
-### 2.6 `analysis.py` and `iav/vertical_cardinality.py` relationship
+### 2.6 `pitch_grid.py`, `analysis.py`, and `iav/vertical_cardinality.py` relationship
 
-Pitch-unit and pitch-class primitives (`_midi_from_note_tuple`, `_pitch_unit`, `_pc_class`, `validate_edo`, `_STEP_TO_SEMITONE`, `TUNING_PRESETS`) are **implemented in parallel** in `iav/vertical_cardinality.py` and `src/textural_dimension/analysis.py`. The score-wide pipeline (`_collect_events`, `_build_cardinality_series`, tuning auto-detect, micro/macro, exports) exists only in `analysis.py`.
+Pitch-unit and pitch-class primitives (`NoteTuple`, `TUNING_PRESETS`, `_STEP_TO_SEMITONE`, `validate_edo`, `_nearest_int`, `_midi_from_note_tuple`, `_pitch_unit`, `_pc_class`) are **defined once** in `src/textural_dimension/pitch_grid.py`. `iav/vertical_cardinality.py` and `src/textural_dimension/analysis.py` import and re-export these names so existing import paths remain valid. The score-wide pipeline (`_collect_events`, `_build_cardinality_series`, tuning auto-detect, micro/macro, exports) exists only in `analysis.py`.
 
 The public slice API `vertical_cardinality_for_notes` and summary-row pass-through `vertical_cardinality_from_summary_row` live in `iav/vertical_cardinality.py` and are re-exported through `textural_dimension.cardinality` (dynamic import of the local `iav` module). `analyze_vertical_cardinality` does **not** call `iav` at runtime; slice-level cardinality on a flat active-note list is mathematically equivalent to the sweep-line counters when half-open activity semantics apply (verified in tests).
 
-**Parity tests** (`tests/test_iav_analysis_pitch_parity.py`, 117 tests) guard constant drift, primitive identity, slice cardinality equivalence, extended sweep-line vs naive-iav scans (24/48/31-EDO), event precompute (`units`/`pcs`), and a lightweight max-cardinality check on the micro-corpus fixtures. These tests do not add analytical features; they document and lock current equivalence before any future deduplication refactor.
+**Parity tests** (`tests/test_iav_analysis_pitch_parity.py`, 117 tests; `tests/test_pitch_grid_shared_primitives.py`, 4 tests) guard constant drift, re-export identity, primitive identity, slice cardinality equivalence, extended sweep-line vs naive-iav scans (24/48/31-EDO), event precompute (`units`/`pcs`), and a lightweight max-cardinality check on the micro-corpus fixtures. These tests do not add analytical features; they document and lock behavioural equivalence across `pitch_grid.py`, `analysis.py`, and `iav/vertical_cardinality.py`.
 
 ## 3) Event extraction from scores
 
@@ -346,7 +346,7 @@ Optional keyword arguments: `time_step` (default `0.25`, or `None` for event-bou
 
 ### 10.1 Test suite
 
-**240 tests** in `tests/` (**13** modules). Representative groups:
+**244 tests** in `tests/` (**14** modules). Representative groups:
 
 | Module | Tests | Scope |
 |--------|------:|-------|
@@ -360,7 +360,8 @@ Optional keyword arguments: `time_step` (default `0.25`, or `None` for event-bou
 | `test_analytical_musicological_cardinality_plausibility` | 12 | Symbolic plausibility ordering (not perceptual validation) |
 | `test_cli_analyze_score` | 5 | Headless `analyze-score` CLI and legacy direct-input routing |
 | `test_regression_micro_corpus` | 31 | Micro-corpus fixture regression (see §10.3) |
-| `test_iav_analysis_pitch_parity` | 117 | `analysis.py` vs `iav` pitch-primitive parity (see §10.4) |
+| `test_iav_analysis_pitch_parity` | 117 | `pitch_grid.py` / `analysis.py` / `iav` pitch-primitive parity (see §10.4) |
+| `test_pitch_grid_shared_primitives` | 4 | Shared `pitch_grid.py` re-export identity (see §10.4) |
 | `test_repository_hygiene` | 5 | Repository metadata and CLI smoke checks |
 
 ### 10.2 Continuous integration
@@ -372,7 +373,7 @@ GitHub Actions workflow **Tests** (`.github/workflows/tests.yml`):
 - Full suite: `python -m pytest tests -q`
 - Coverage gate: `--cov=textural_dimension --cov=iav --cov-fail-under=85`
 
-Local coverage on a representative run is approximately **90.4%** total (`textural_dimension` + `iav`); the gate is set at **85%** to avoid brittle cross-environment failures.
+Local coverage on a representative run is approximately **90.34%** total (`textural_dimension` + `iav`); the gate is set at **85%** to avoid brittle cross-environment failures.
 
 ### 10.3 Micro-corpus regression fixtures
 
@@ -384,9 +385,11 @@ Protected properties: fixture loading, scalar regression (`event_count`, `sample
 
 These fixtures are **output-stability regression** only. They are not a representative musical corpus, not perceptual validation, and not acoustic analysis.
 
-### 10.4 `analysis.py` / `iav` pitch-primitive parity
+### 10.4 `pitch_grid.py` / `analysis.py` / `iav` pitch-primitive parity
 
-`tests/test_iav_analysis_pitch_parity.py` (**117** tests) verifies that duplicated pitch/cardinality primitives in `analysis.py` and `iav/vertical_cardinality.py` currently agree for comparable inputs. Covered areas:
+Shared pitch-grid primitives live in `src/textural_dimension/pitch_grid.py`. `tests/test_pitch_grid_shared_primitives.py` (**4** tests) verifies that `analysis.py` and `iav/vertical_cardinality.py` re-export the same callables as the canonical module for `_pitch_unit`, `_pc_class`, `validate_edo`, and `TUNING_PRESETS`.
+
+`tests/test_iav_analysis_pitch_parity.py` (**117** tests) verifies that the shared primitives and slice APIs agree for comparable inputs across the score-wide pipeline and the iav slice path. Covered areas:
 
 - `_STEP_TO_SEMITONE` and `TUNING_PRESETS` constant parity (drift guard)
 - `validate_edo` accept/reject behaviour

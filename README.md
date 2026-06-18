@@ -1,7 +1,7 @@
 # Textural-Cardinality
 
 **Package version:** 1.1.0 (`pyproject.toml`, `CITATION.cff`)  
-**CI:** GitHub Actions — **240** tests on Python **3.10** and **3.11** (`python -m pytest tests -q`), with an **85%** coverage gate on `textural_dimension` and `iav` (local total coverage approximately **90.4%**). See [`.github/workflows/tests.yml`](.github/workflows/tests.yml).
+**CI:** GitHub Actions — **244** tests on Python **3.10** and **3.11** (`python -m pytest tests -q`), with an **85%** coverage gate on `textural_dimension` and `iav` (local total coverage approximately **90.34%**). See [`.github/workflows/tests.yml`](.github/workflows/tests.yml).
 
 Cardinality-only symbolic toolkit with a graphical interface for score upload, analysis, and professional plotting.
 
@@ -167,7 +167,7 @@ python -m pytest tests -q
 python -m pytest tests -q --cov=textural_dimension --cov=iav --cov-report=term-missing --cov-fail-under=85
 ```
 
-**240 tests** across **13** modules, including temporal-semantics contracts, EDO/export contracts, unpitched policy, Gradio smoke tests (import/build/delegation only — no server launch in CI), analytical-musicological plausibility checks (not perceptual validation), headless `analyze-score` CLI tests, a **micro-corpus regression fixture set** (`tests/fixtures/regression_corpus/`, 7 symbolic MusicXML scores with expected JSON snapshots), and **iav/analysis pitch-primitive parity tests** (`tests/test_iav_analysis_pitch_parity.py`, 117 tests). Regression fixtures and parity tests are software-validation guards only; they are not a musical corpus claim and do not validate perception or acoustics.
+**244 tests** across **14** modules, including temporal-semantics contracts, EDO/export contracts, unpitched policy, Gradio smoke tests (import/build/delegation only — no server launch in CI), analytical-musicological plausibility checks (not perceptual validation), headless `analyze-score` CLI tests, a **micro-corpus regression fixture set** (`tests/fixtures/regression_corpus/`, 7 symbolic MusicXML scores with expected JSON snapshots), **shared pitch-grid primitive tests** (`tests/test_pitch_grid_shared_primitives.py`, 4 tests), and **iav/analysis pitch-primitive parity tests** (`tests/test_iav_analysis_pitch_parity.py`, 117 tests). Regression fixtures and parity tests are software-validation guards only; they are not a musical corpus claim and do not validate perception or acoustics.
 
 ## Documentation
 
