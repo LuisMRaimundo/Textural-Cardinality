@@ -1,13 +1,13 @@
 cff-version: 1.2.0
-title: Textural cardinality
+title: Textural_Cardinality
 message: >-
   If you use this software, please cite it using the metadata below.
 type: software
 authors:
   - family-names: Raimundo
     given-names: Luís
-repository-code: 'https://github.com/LuisMRaimundo/Textural-Cardinality'
-url: 'https://github.com/LuisMRaimundo/Textural-Cardinality'
+repository-code: 'https://github.com/LuisMRaimundo/Textural_Cardinality'
+url: 'https://github.com/LuisMRaimundo/Textural_Cardinality'
 version: 1.1.0
 keywords:
   - vertical cardinality

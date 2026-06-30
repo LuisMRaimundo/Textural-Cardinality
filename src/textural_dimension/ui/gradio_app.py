@@ -150,7 +150,7 @@ def _build_plot(analysis: dict[str, Any], *, view_mode: str, pc_secondary_axis: 
     fig.update_layout(
         template="plotly_white",
         title={
-            "text": "Textural cardinality - Vertical Cardinality Profile",
+            "text": "Textural_Cardinality - Vertical Cardinality Profile",
             "x": 0.01,
             "xanchor": "left",
         },
@@ -248,9 +248,9 @@ def run_cardinality_app(
 
 
 def build_demo() -> gr.Blocks:
-    demo = gr.Blocks(title="Textural cardinality - Vertical Cardinality", theme=gr.themes.Soft())
+    demo = gr.Blocks(title="Textural_Cardinality - Vertical Cardinality", theme=gr.themes.Soft())
     with demo:
-        gr.Markdown("# Textural cardinality")
+        gr.Markdown("# Textural_Cardinality")
         gr.Markdown(
             "Upload a MusicXML/MXL/MIDI score to compute symbolic vertical cardinality over time "
             "using equal-tempered quantisation grids. Every event onset and offset is sampled "

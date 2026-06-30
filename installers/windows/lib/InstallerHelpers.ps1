@@ -1,4 +1,4 @@
-# Shared helpers for Textural cardinality Windows one-click install
+# Shared helpers for Textural_Cardinality Windows one-click install
 
 function Write-InstallLog {
     param([string]$Message, [string]$Level = 'INFO')
@@ -26,8 +26,8 @@ function Find-ExistingPython {
         if (-not $cmd) { continue }
         try {
             $minor = & $cmd.Source -c 'import sys; print(sys.version_info.minor)' 2>$null
-            if ([int]$minor -ge $script:TexturalCardinalityConfig.PythonMinMinor -and
-                [int]$minor -le $script:TexturalCardinalityConfig.PythonMaxMinor) {
+            if ([int]$minor -ge $script:Textural_CardinalityConfig.PythonMinMinor -and
+                [int]$minor -le $script:Textural_CardinalityConfig.PythonMaxMinor) {
                 return $cmd.Source
             }
         } catch { }
@@ -36,7 +36,7 @@ function Find-ExistingPython {
 }
 
 function Install-Python311 {
-    $cfg = $script:TexturalCardinalityConfig
+    $cfg = $script:Textural_CardinalityConfig
     $installer = Join-Path $env:TEMP "python-$($cfg.PythonVersion)-amd64.exe"
     Write-InstallLog "Downloading Python $($cfg.PythonVersion) …"
     Invoke-WebRequest -Uri $cfg.PythonInstallerUrl -OutFile $installer -UseBasicParsing
@@ -56,7 +56,7 @@ function Initialize-AppSource {
         [string]$DestAppDir,
         [switch]$ForceRefresh
     )
-    $cfg = $script:TexturalCardinalityConfig
+    $cfg = $script:Textural_CardinalityConfig
     $marker = Join-Path $DestAppDir 'pyproject.toml'
     if ((Test-Path $marker) -and -not $ForceRefresh) {
         Write-InstallLog "Application source already present: $DestAppDir"
@@ -114,8 +114,8 @@ function Register-Shortcuts {
         [string]$AppDir,
         [string]$VenvDir
     )
-    $cfg = $script:TexturalCardinalityConfig
-    $launchBat = Join-Path $InstallRoot 'Launch-Textural-Cardinality.bat'
+    $cfg = $script:Textural_CardinalityConfig
+    $launchBat = Join-Path $InstallRoot 'Launch-Textural_Cardinality.bat'
     $venvPy = Join-Path $VenvDir 'Scripts\python.exe'
     @"
 @echo off
@@ -136,7 +136,7 @@ if errorlevel 1 pause
         $sc = $wsh.CreateShortcut($lnk)
         $sc.TargetPath = $launchBat
         $sc.WorkingDirectory = $InstallRoot
-        $sc.Description = 'Textural cardinality vertical-cardinality analyser (Gradio)'
+        $sc.Description = 'Textural_Cardinality vertical-cardinality analyser (Gradio)'
         $sc.Save()
     }
     Write-InstallLog "Shortcuts created (Desktop and Start menu)"

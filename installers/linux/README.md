@@ -1,4 +1,4 @@
-# Linux installers — Textural cardinality
+# Linux installers — Textural_Cardinality
 
 ## End users
 
@@ -8,7 +8,7 @@ chmod +x install-easy.sh
 ./install-easy.sh
 ```
 
-Then run `~/.local/share/TexturalCardinality/launch-textural-cardinality.sh` or `~/Desktop/Textural-Cardinality.sh`.
+Then run `~/.local/share/Textural_Cardinality/launch-textural-cardinality.sh` or `~/Desktop/Textural_Cardinality.sh`.
 
 Requires **Python 3.10 or 3.11** and **unzip** / **curl** (usually preinstalled).
 

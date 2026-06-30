@@ -2,7 +2,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
-echo "Textural cardinality — PyInstaller build (macOS, maintainer)"
+echo "Textural_Cardinality — PyInstaller build (macOS, maintainer)"
 if ! command -v pyinstaller >/dev/null 2>&1; then
   echo "Install: pip install pyinstaller && pip install -e ."
   exit 1

@@ -1,8 +1,8 @@
-# Notice — Textural cardinality
+# Notice — Textural_Cardinality
 
 Copyright © Luís Raimundo and contributors. All rights reserved.
 
-This notice governs the **Textural-Cardinality** application source, documentation, and branding only.
+This notice governs the **Textural_Cardinality** application source, documentation, and branding only.
 
 ## Terms of use
 

@@ -3,9 +3,9 @@ requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "textural-dimension"
+name = "textural-cardinality"
 version = "1.1.0"
-description = "Textural cardinality toolkit: symbolic vertical note, pitch, and pitch-class counts with exact event-boundary sampling."
+description = "Textural_Cardinality — symbolic vertical note, pitch, and pitch-class counts with exact event-boundary sampling."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Proprietary / project-local — see repository" }
@@ -22,6 +22,7 @@ dev = [
 ]
 
 [project.scripts]
+textural-cardinality = "textural_dimension.__main__:main"
 textural-dimension = "textural_dimension.__main__:main"
 
 [tool.setuptools.packages.find]

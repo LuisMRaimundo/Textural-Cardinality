@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# One-click setup for Linux. Repo: https://github.com/LuisMRaimundo/Textural-Cardinality
+# One-click setup for Linux. Repo: https://github.com/LuisMRaimundo/Textural_Cardinality
 set -euo pipefail
 
-INSTALL_ROOT="${HOME}/.local/share/TexturalCardinality"
+INSTALL_ROOT="${HOME}/.local/share/Textural_Cardinality"
 APP_DIR="${INSTALL_ROOT}/app"
 VENV_DIR="${INSTALL_ROOT}/venv"
-GITHUB_ZIP="https://github.com/LuisMRaimundo/Textural-Cardinality/archive/refs/heads/main.zip"
-ZIP_FOLDER="Textural-Cardinality-main"
+GITHUB_ZIP="https://github.com/LuisMRaimundo/Textural_Cardinality/archive/refs/heads/main.zip"
+ZIP_FOLDER="Textural_Cardinality-main"
 
-echo "=== Textural cardinality — Installer (Linux) ==="
+echo "=== Textural_Cardinality — Installer (Linux) ==="
 
 find_python() {
   for c in python3.11 python3.10 python3; do
@@ -56,8 +56,8 @@ chmod +x "${LAUNCHER}"
 
 DESKTOP_DIR="${HOME}/Desktop"
 if [[ -d "${DESKTOP_DIR}" ]]; then
-  cp "${LAUNCHER}" "${DESKTOP_DIR}/Textural-Cardinality.sh"
-  chmod +x "${DESKTOP_DIR}/Textural-Cardinality.sh"
+  cp "${LAUNCHER}" "${DESKTOP_DIR}/Textural_Cardinality.sh"
+  chmod +x "${DESKTOP_DIR}/Textural_Cardinality.sh"
 fi
 
 echo "Done. Run: ${LAUNCHER}"

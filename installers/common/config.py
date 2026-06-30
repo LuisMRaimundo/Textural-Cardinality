@@ -1,4 +1,4 @@
-"""Paths and download URLs for Textural cardinality autonomous installers."""
+"""Paths and download URLs for Textural_Cardinality autonomous installers."""
 
 from __future__ import annotations
 
@@ -16,8 +16,8 @@ STAMP_FILE = RUNTIME_DIR / ".install_ok"
 
 GRADIO_HOST = "127.0.0.1"
 GRADIO_PORT_START = 7860
-GITHUB_REPO = "https://github.com/LuisMRaimundo/Textural-Cardinality"
-GITHUB_ZIP = "https://github.com/LuisMRaimundo/Textural-Cardinality/archive/refs/heads/main.zip"
+GITHUB_REPO = "https://github.com/LuisMRaimundo/Textural_Cardinality"
+GITHUB_ZIP = "https://github.com/LuisMRaimundo/Textural_Cardinality/archive/refs/heads/main.zip"
 
 
 def platform_key() -> str:

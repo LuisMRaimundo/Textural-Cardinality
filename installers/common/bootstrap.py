@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Bootstrap portable Python + Textural cardinality dependencies, then launch the Gradio app.
+Bootstrap portable Python + Textural_Cardinality dependencies, then launch the Gradio app.
 
 Used by installers/windows, installers/mac, installers/linux when running from a clone.
 """
@@ -151,7 +151,7 @@ def ensure_app_installed(py: Path) -> None:
             pass
 
     req = PROJECT_ROOT / "requirements-install.txt"
-    _log("Installing Textural cardinality dependencies (first run may take several minutes) …")
+    _log("Installing Textural_Cardinality dependencies (first run may take several minutes) …")
     _run([str(py), "-m", "pip", "install", "--upgrade", "pip", "wheel", "setuptools"])
     _run([str(py), "-m", "pip", "install", "-r", str(req)])
     RUNTIME_DIR.mkdir(parents=True, exist_ok=True)
@@ -180,7 +180,7 @@ def _pick_free_port(host: str = GRADIO_HOST, start: int = GRADIO_PORT_START) -> 
 
 def launch_gradio(py: Path) -> int:
     env = os.environ.copy()
-    cache = Path(env.get("LOCALAPPDATA", env.get("HOME", "."))) / "TexturalCardinality" / "exports"
+    cache = Path(env.get("LOCALAPPDATA", env.get("HOME", "."))) / "Textural_Cardinality" / "exports"
     env.setdefault("TEXTURAL_CARDINALITY_CACHE_DIR", str(cache))
     Path(env["TEXTURAL_CARDINALITY_CACHE_DIR"]).mkdir(parents=True, exist_ok=True)
     src_path = PROJECT_ROOT / "src"
@@ -192,7 +192,7 @@ def launch_gradio(py: Path) -> int:
 
     port = _pick_free_port()
     url = f"http://{GRADIO_HOST}:{port}/"
-    _log(f"Starting Textural cardinality — open {url}")
+    _log(f"Starting Textural_Cardinality — open {url}")
     time.sleep(1.5)
     try:
         webbrowser.open(url)
@@ -230,7 +230,7 @@ def cmd_doctor(_: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Textural cardinality bootstrap")
+    parser = argparse.ArgumentParser(description="Textural_Cardinality bootstrap")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("setup").set_defaults(func=cmd_setup)
     sub.add_parser("launch").set_defaults(func=cmd_launch)

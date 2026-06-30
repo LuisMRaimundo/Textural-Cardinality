@@ -1,4 +1,4 @@
-"""Textural dimension toolkit focused on vertical cardinality only.
+"""Textural_Cardinality toolkit focused on vertical cardinality only.
 
 See ``TECHNICAL_MANUAL.md`` for formulas, event-boundary sampling, and
 interpretation boundaries.

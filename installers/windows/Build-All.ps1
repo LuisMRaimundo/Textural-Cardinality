@@ -11,7 +11,7 @@ if (-not (Test-Path $BuildScript)) {
     throw "Missing build script: $BuildScript"
 }
 
-Write-Host 'Textural cardinality — PyInstaller build (maintainer)' -ForegroundColor Cyan
+Write-Host 'Textural_Cardinality — PyInstaller build (maintainer)' -ForegroundColor Cyan
 Write-Host "Repository: $RepoRoot"
 Write-Host 'Prerequisites: pip install -e . ; pip install pyinstaller'
 Write-Host ''
@@ -25,4 +25,4 @@ finally {
 }
 
 Write-Host ''
-Write-Host 'Distribute dist\TexturalCardinality\ via GitHub Releases (not git).' -ForegroundColor Yellow
+Write-Host 'Distribute dist\Textural_Cardinality\ via GitHub Releases (not git).' -ForegroundColor Yellow

@@ -1,8 +1,8 @@
-# Textural cardinality — installers
+# Textural_Cardinality — installers
 
-**Repository:** https://github.com/LuisMRaimundo/Textural-Cardinality
+**Repository:** https://github.com/LuisMRaimundo/Textural_Cardinality
 
-This folder contains scripts to install **Textural cardinality** for users **without prior Python setup**. Open the folder for your operating system:
+This folder contains scripts to install **Textural_Cardinality** for users **without prior Python setup**. Open the folder for your operating system:
 
 | Folder | System | Recommended entry point |
 |--------|--------|-------------------------|
@@ -15,7 +15,7 @@ Each subfolder includes a **README** with platform-specific steps.
 ## What the standard installer does
 
 1. Installs or detects **Python 3.10 or 3.11** (on Windows, installs automatically if missing).
-2. Fetches source from **https://github.com/LuisMRaimundo/Textural-Cardinality** (`main` branch).
+2. Fetches source from **https://github.com/LuisMRaimundo/Textural_Cardinality** (`main` branch).
 3. Creates an isolated environment and installs libraries from `requirements-install.txt`.
 4. Adds a **shortcut** to launch the **Gradio** interface (vertical cardinality analysis with exact event-boundary sampling).
 
@@ -32,7 +32,7 @@ The first run may take **10–25 minutes** (download plus scientific packages). 
 
 ## Not included in Git
 
-Folders `runtime/`, `build/`, `dist/`, `output/`, and compiled `.exe` / `.zip` / `.dmg` / `.tar.gz` artefacts are **not** committed. To distribute ready-made binaries, use [GitHub Releases](https://github.com/LuisMRaimundo/Textural-Cardinality/releases).
+Folders `runtime/`, `build/`, `dist/`, `output/`, and compiled `.exe` / `.zip` / `.dmg` / `.tar.gz` artefacts are **not** committed. To distribute ready-made binaries, use [GitHub Releases](https://github.com/LuisMRaimundo/Textural_Cardinality/releases).
 
 ## Portable builds (developers)
 

@@ -1,12 +1,12 @@
 @echo off
-title Textural cardinality - Installer
+title Textural_Cardinality - Installer
 cd /d "%~dp0"
 
 echo.
-echo Textural cardinality - automatic setup
+echo Textural_Cardinality - automatic setup
 echo (Python + libraries + shortcuts)
 echo.
-echo GitHub: https://github.com/LuisMRaimundo/Textural-Cardinality
+echo GitHub: https://github.com/LuisMRaimundo/Textural_Cardinality
 echo.
 echo Do not close this window until finished.
 echo.
@@ -17,7 +17,7 @@ set ERR=%ERRORLEVEL%
 echo.
 if %ERR% NEQ 0 (
   echo Installation failed. See install.log in:
-  echo %LOCALAPPDATA%\Programs\TexturalCardinality\
+  echo %LOCALAPPDATA%\Programs\Textural_Cardinality\
 ) else (
   echo Done.
 )

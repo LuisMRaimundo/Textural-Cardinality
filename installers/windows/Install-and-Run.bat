@@ -1,6 +1,6 @@
 @echo off
 setlocal EnableExtensions
-title Textural cardinality
+title Textural_Cardinality
 
 cd /d "%~dp0..\.."
 set "ROOT=%CD%"
@@ -8,7 +8,7 @@ set "PY=%ROOT%\installers\runtime\windows\python\python.exe"
 set "BOOT=%ROOT%\installers\common\bootstrap.py"
 
 echo.
-echo  Textural cardinality
+echo  Textural_Cardinality
 echo  ====================
 echo.
 

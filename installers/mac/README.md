@@ -1,4 +1,4 @@
-# macOS installers — Textural cardinality
+# macOS installers — Textural_Cardinality
 
 ## End users
 
@@ -8,7 +8,7 @@
    chmod +x install-easy.sh
    ./install-easy.sh
    ```
-3. Launch **Textural cardinality** from `~/Desktop/Textural-Cardinality.command` or `~/Applications/TexturalCardinality/Launch-Textural-Cardinality.command`.
+3. Launch **Textural_Cardinality** from `~/Desktop/Textural_Cardinality.command` or `~/Applications/Textural_Cardinality/Launch-Textural_Cardinality.command`.
 
 First run needs **Internet** and may take **10–25 minutes**.
 

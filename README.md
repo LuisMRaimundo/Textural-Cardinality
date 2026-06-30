@@ -1,5 +1,6 @@
-# Textural-Cardinality
+# Textural_Cardinality
 
+**Repository:** [github.com/LuisMRaimundo/Textural_Cardinality](https://github.com/LuisMRaimundo/Textural_Cardinality)  
 **Package version:** 1.1.0 (`pyproject.toml`, `CITATION.cff`)  
 **CI:** GitHub Actions — **244** tests on Python **3.10** and **3.11** (`python -m pytest tests -q`), with an **85%** coverage gate on `textural_dimension` and `iav` (local total coverage approximately **90.34%**). See [`.github/workflows/tests.yml`](.github/workflows/tests.yml).
 
@@ -7,11 +8,11 @@ Cardinality-only symbolic toolkit with a graphical interface for score upload, a
 
 ## Theoretical scope
 
-Textural cardinality is an author-defined operational construct. It denotes a family of score-derived, time-indexed cardinality descriptors for vertical symbolic texture. In this release, it measures active note-event count, distinct symbolic pitch-unit count, equal-tempered pitch-class cardinality, and a **micro/macro textural index** aligned with thesis §4.3.6: distinct pitch positions within the reference register **A0–C8**, normalized against the closed reference universe (88 semitone positions at 100-cent bins, 175 quarter-tone positions at 50-cent bins).
+Textural_Cardinality is an author-defined operational construct. It denotes a family of score-derived, time-indexed cardinality descriptors for vertical symbolic texture. In this release, it measures active note-event count, distinct symbolic pitch-unit count, equal-tempered pitch-class cardinality, and a **micro/macro textural index** aligned with thesis §4.3.6: distinct pitch positions within the reference register **A0–C8**, normalized against the closed reference universe (88 semitone positions at 100-cent bins, 175 quarter-tone positions at 50-cent bins).
 
 The construct is motivated by quantitative approaches to musical texture, especially approaches in which texture is partly described through the number of sounding components and their interrelations. It is narrower than a theory of texture. It does not model timbre, orchestration, register, spacing, density-compression, dynamics, articulation, stream segregation, perceptual salience, roughness, fusion, or formal function.
 
-Textural cardinality should therefore be read as a reproducible symbolic descriptor, not as a complete analytical interpretation.
+Textural_Cardinality should therefore be read as a reproducible symbolic descriptor, not as a complete analytical interpretation.
 
 ## Features
 
@@ -185,7 +186,7 @@ This software and its documentation are proprietary. No open-source licence is g
 
 Academic and research use may be permitted under separate agreement or institutional policy; when in doubt, contact the author before redistribution or derivative distribution.
 
-Third-party components: runtime dependencies (e.g. Python packages listed in `pyproject.toml`) are subject to their respective licences. This notice governs the Textural-Cardinality application source, documentation, and branding only.
+Third-party components: runtime dependencies (e.g. Python packages listed in `pyproject.toml`) are subject to their respective licences. This notice governs the Textural_Cardinality application source, documentation, and branding only.
 
 ## Contact
 

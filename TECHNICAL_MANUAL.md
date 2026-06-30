@@ -1,4 +1,4 @@
-# Technical Manual — Textural-Cardinality
+# Technical Manual — Textural_Cardinality
 
 This manual documents the mathematics, algorithms, interpretation boundaries, and export semantics currently implemented in the codebase.
 
@@ -6,7 +6,7 @@ This manual documents the mathematics, algorithms, interpretation boundaries, an
 
 ### 0.1 Status of the term
 
-`Textural cardinality` is an author-defined term. It is not used here as a pre-existing standard category in music theory. It is introduced as an operational, score-based construct: the cardinality of selected sets or multisets of symbolic musical objects active at a given score-global time point.
+`Textural_Cardinality` is an author-defined term. It is not used here as a pre-existing standard category in music theory. It is introduced as an operational, score-based construct: the cardinality of selected sets or multisets of symbolic musical objects active at a given score-global time point.
 
 ### 0.2 Relation to texture theory
 
@@ -123,7 +123,7 @@ When `bin_cents` and `edo` are coherent (including preset pairs), `vertical_pitc
 
 ### 2.5 Unpitched and percussion events
 
-Textural-Cardinality analyses **pitched** symbolic events only. Event extraction traverses `score.recurse().notes` and retains elements only when a definite pitch with octave can be formed (`_pitch_to_note_tuple`).
+Textural_Cardinality analyses **pitched** symbolic events only. Event extraction traverses `score.recurse().notes` and retains elements only when a definite pitch with octave can be formed (`_pitch_to_note_tuple`).
 
 - `Note` and `Chord` members with valid pitch/octave are included.
 - `Unpitched` percussion (and any other note-like element without a definite pitched height) is **silently excluded** from `event_count` and from all pitch-cardinality measures.
