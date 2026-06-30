@@ -12,7 +12,7 @@ import gradio as gr
 import plotly.graph_objects as go
 import pytest
 
-import textural_dimension.ui.gradio_app as gradio_app
+import textural_cardinality.ui.gradio_app as gradio_app
 
 
 FORBIDDEN_SCOPE_TOKENS = (
@@ -91,7 +91,7 @@ def test_import_gradio_app_does_not_launch_server_or_run_analysis(monkeypatch: p
         raise AssertionError("analyze_vertical_cardinality must not run on import")
 
     monkeypatch.setattr(
-        "textural_dimension.analysis.analyze_vertical_cardinality",
+        "textural_cardinality.analysis.analyze_vertical_cardinality",
         _forbidden_analysis,
     )
     reloaded = importlib.reload(gradio_app)

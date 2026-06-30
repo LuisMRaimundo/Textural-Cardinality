@@ -23,7 +23,7 @@ from music21.note import Note
 from music21.pitch import Pitch
 from music21.stream import Score
 
-from textural_dimension.pitch_grid import (
+from textural_cardinality.pitch_grid import (
     NoteTuple,
     TUNING_PRESETS,
     _STEP_TO_SEMITONE,
@@ -578,7 +578,7 @@ def analyze_vertical_cardinality(
 
 def write_cardinality_csv(analysis: dict[str, Any]) -> str:
     with tempfile.NamedTemporaryFile(
-        prefix="textural_dimension_cardinality_",
+        prefix="textural_cardinality_",
         suffix=".csv",
         delete=False,
     ) as tf:
@@ -622,7 +622,7 @@ def write_cardinality_csv(analysis: dict[str, Any]) -> str:
 
 def write_cardinality_json(analysis: dict[str, Any]) -> str:
     with tempfile.NamedTemporaryFile(
-        prefix="textural_dimension_cardinality_",
+        prefix="textural_cardinality_",
         suffix=".json",
         delete=False,
     ) as tf:

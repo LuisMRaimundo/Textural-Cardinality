@@ -28,7 +28,7 @@ jobs:
       - name: Coverage gate
         run: |
           python -m pytest tests -q \
-            --cov=textural_dimension \
+            --cov=textural_cardinality \
             --cov=iav \
             --cov-report=term-missing \
             --cov-fail-under=85

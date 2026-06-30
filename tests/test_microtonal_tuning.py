@@ -9,7 +9,7 @@ from music21.note import Note
 from music21.pitch import Pitch
 from music21.stream import Part, Score
 
-from textural_dimension.analysis import (
+from textural_cardinality.analysis import (
     _collect_events,
     _non_grid_pitches,
     analyze_vertical_cardinality,

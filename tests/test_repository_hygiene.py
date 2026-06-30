@@ -3,8 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 
-from textural_dimension.__main__ import main as cli_main
-from textural_dimension.cardinality import vertical_cardinality_for_notes
+from textural_cardinality.__main__ import main as cli_main
+from textural_cardinality.cardinality import vertical_cardinality_for_notes
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -15,6 +15,8 @@ def test_readme_has_no_stale_terms() -> None:
     assert ("Orcho" + "mogeneity") not in readme
     assert ("Aknow" + "ledgments") not in readme
     assert ("Aknow" + "ledgements") not in readme
+    assert "textural_dimension" not in readme
+    assert "textural-dimension" not in readme
     assert "## Acknowledgements" in readme
 
 
@@ -45,7 +47,7 @@ def test_cli_direct_input_outputs_metadata(capsys, monkeypatch) -> None:
         sys,
         "argv",
         [
-            "textural_dimension",
+            "textural_cardinality",
             "--notes",
             "4",
             "--unique-pitches",

@@ -13,8 +13,8 @@ from music21.note import Note
 from music21.pitch import Pitch
 from music21.stream import Part, Score
 
-from textural_dimension.__main__ import run_analyze_score, run_direct_input
-from textural_dimension.analysis import analyze_vertical_cardinality
+from textural_cardinality.__main__ import run_analyze_score, run_direct_input
+from textural_cardinality.analysis import analyze_vertical_cardinality
 
 
 def _write_score_with_chord(pitch_names: list[str]) -> str:
@@ -123,7 +123,7 @@ def test_analyze_score_does_not_launch_gui(monkeypatch: pytest.MonkeyPatch) -> N
         launched.append("gui")
         raise AssertionError("GUI must not launch for analyze-score")
 
-    monkeypatch.setattr("textural_dimension.ui.gradio_app.main", _forbidden_gui)
+    monkeypatch.setattr("textural_cardinality.ui.gradio_app.main", _forbidden_gui)
 
     score_path = _write_score_with_chord(["C4"])
     try:

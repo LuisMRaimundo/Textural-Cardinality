@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from textural_dimension.cardinality import (
+from textural_cardinality.cardinality import (
     vertical_cardinality_for_notes,
     vertical_cardinality_from_summary_row,
 )

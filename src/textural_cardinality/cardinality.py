@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 _IAV_PATH = Path(__file__).resolve().parents[2] / "iav" / "vertical_cardinality.py"
-_IAV_SPEC = importlib.util.spec_from_file_location("textural_dimension._iav_vertical_cardinality", _IAV_PATH)
+_IAV_SPEC = importlib.util.spec_from_file_location("textural_cardinality._iav_vertical_cardinality", _IAV_PATH)
 if _IAV_SPEC is None or _IAV_SPEC.loader is None:
     raise ImportError(f"Could not load local IAV module at {_IAV_PATH}")
 _IAV_MODULE = importlib.util.module_from_spec(_IAV_SPEC)

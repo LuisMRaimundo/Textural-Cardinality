@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import iav.vertical_cardinality as iav_vc
-import textural_dimension.analysis as analysis
-import textural_dimension.pitch_grid as pitch_grid
+import textural_cardinality.analysis as analysis
+import textural_cardinality.pitch_grid as pitch_grid
 
 
 def test_pitch_unit_is_shared_callable() -> None:

@@ -22,12 +22,11 @@ dev = [
 ]
 
 [project.scripts]
-textural-cardinality = "textural_dimension.__main__:main"
-textural-dimension = "textural_dimension.__main__:main"
+textural-cardinality = "textural_cardinality.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["src", "."]
-include = ["textural_dimension*", "iav"]
+include = ["textural_cardinality*", "iav"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

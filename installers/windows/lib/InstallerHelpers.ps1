@@ -122,7 +122,7 @@ function Register-Shortcuts {
 title $($cfg.AppName)
 cd /d "$AppDir"
 set "PYTHONPATH=$AppDir\src;%PYTHONPATH%"
-"$venvPy" -m textural_dimension
+"$venvPy" -m textural_cardinality
 if errorlevel 1 pause
 "@ | Set-Content -LiteralPath $launchBat -Encoding ASCII
 

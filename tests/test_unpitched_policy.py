@@ -8,7 +8,7 @@ import tempfile
 from music21.note import Note, Unpitched
 from music21.stream import Part, Score
 
-from textural_dimension.analysis import _collect_events, analyze_vertical_cardinality
+from textural_cardinality.analysis import _collect_events, analyze_vertical_cardinality
 
 
 def _write_score(score: Score) -> str:

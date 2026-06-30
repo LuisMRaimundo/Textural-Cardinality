@@ -8,7 +8,7 @@ from typing import Any
 import gradio as gr
 import plotly.graph_objects as go
 
-from textural_dimension.analysis import (
+from textural_cardinality.analysis import (
     DEFAULT_BIN_CENTS,
     DEFAULT_EDO,
     TUNING_PRESETS,

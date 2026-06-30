@@ -8,7 +8,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from textural_dimension.analysis import (
+from textural_cardinality.analysis import (
     DEFAULT_BIN_CENTS,
     DEFAULT_EDO,
     TUNING_PRESETS,
@@ -16,7 +16,7 @@ from textural_dimension.analysis import (
     write_cardinality_csv,
     write_cardinality_json,
 )
-from textural_dimension.cardinality import vertical_cardinality_from_summary_row
+from textural_cardinality.cardinality import vertical_cardinality_from_summary_row
 
 
 def _series_peak(analysis: dict, field: str) -> int:
@@ -184,7 +184,7 @@ def run_direct_input(argv: list[str] | None = None) -> None:
 
 def main() -> None:
     if len(sys.argv) == 1:
-        from textural_dimension.ui.gradio_app import main as run_gradio_app
+        from textural_cardinality.ui.gradio_app import main as run_gradio_app
 
         run_gradio_app()
         return

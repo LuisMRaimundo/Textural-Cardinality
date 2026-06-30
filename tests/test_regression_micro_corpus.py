@@ -9,8 +9,8 @@ from typing import Any
 
 import pytest
 
-from textural_dimension.__main__ import run_analyze_score
-from textural_dimension.analysis import analyze_vertical_cardinality
+from textural_cardinality.__main__ import run_analyze_score
+from textural_cardinality.analysis import analyze_vertical_cardinality
 
 CORPUS_DIR = Path(__file__).resolve().parent / "fixtures" / "regression_corpus"
 EXPECTED_DIR = CORPUS_DIR / "expected"

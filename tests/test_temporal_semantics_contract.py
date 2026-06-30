@@ -18,7 +18,7 @@ from music21.note import Note
 from music21.stream import Measure, Part, Score
 from music21.tie import Tie
 
-from textural_dimension.analysis import (
+from textural_cardinality.analysis import (
     REFERENCE_UNIVERSE_12TET,
     _build_cardinality_series,
     _collect_events,

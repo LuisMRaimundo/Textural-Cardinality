@@ -18,7 +18,7 @@ from music21.pitch import Pitch
 from music21.stream import Part, Score
 from music21.tie import Tie
 
-from textural_dimension.analysis import (
+from textural_cardinality.analysis import (
     analyze_vertical_cardinality,
     write_cardinality_csv,
     write_cardinality_json,

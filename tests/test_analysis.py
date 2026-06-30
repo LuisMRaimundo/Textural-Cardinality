@@ -6,7 +6,7 @@ from music21.note import Note
 from music21.pitch import Pitch
 from music21.stream import Measure, Part, Score
 
-from textural_dimension.analysis import (
+from textural_cardinality.analysis import (
     REFERENCE_UNIVERSE_12TET,
     REFERENCE_UNIVERSE_QUARTER_TONE,
     _build_cardinality_series,
@@ -15,7 +15,7 @@ from textural_dimension.analysis import (
     micro_macro_normalized,
     micro_meso_macro_normalized,
 )
-from textural_dimension.cardinality import vertical_cardinality_for_notes
+from textural_cardinality.cardinality import vertical_cardinality_for_notes
 
 def test_collect_events_and_series_basics() -> None:
     score = Score()

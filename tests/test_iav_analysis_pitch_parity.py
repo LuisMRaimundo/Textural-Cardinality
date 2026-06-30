@@ -14,8 +14,8 @@ from music21.pitch import Pitch
 from music21.stream import Part, Score
 
 import iav.vertical_cardinality as iav_vc
-import textural_dimension.analysis as analysis
-from textural_dimension.analysis import (
+import textural_cardinality.analysis as analysis
+from textural_cardinality.analysis import (
     REFERENCE_UNIVERSE_12TET,
     REFERENCE_UNIVERSE_QUARTER_TONE,
     TUNING_PRESETS,

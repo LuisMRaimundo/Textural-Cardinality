@@ -27,7 +27,7 @@ The first run may take **10–25 minutes** (download plus scientific packages). 
 - Micro/macro textural index (A0–C8 reference register) with CSV/JSON export.
 - Exact temporal sampling at every event onset and offset (brief events are not missed); tied notes merged; half-open `[onset, offset)` activity.
 - Configurable supplementary time step for plotting; CSV/JSON export.
-- Headless CLI for cloned repositories: `python -m textural_dimension analyze-score score.mxl --output-csv out.csv --output-json out.json` (installers launch the GUI by default).
+- Headless CLI for cloned repositories: `python -m textural_cardinality analyze-score score.mxl --output-csv out.csv --output-json out.json` (installers launch the GUI by default).
 - See [`TECHNICAL_MANUAL.md`](../TECHNICAL_MANUAL.md) in the repository root for formulas and interpretation boundaries.
 
 ## Not included in Git

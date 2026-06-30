@@ -50,7 +50,7 @@ cat > "${LAUNCHER}" <<EOF
 #!/usr/bin/env bash
 cd "${APP_DIR}"
 export PYTHONPATH="${APP_DIR}/src:\${PYTHONPATH:-}"
-exec "${VENV_DIR}/bin/python" -m textural_dimension
+exec "${VENV_DIR}/bin/python" -m textural_cardinality
 EOF
 chmod +x "${LAUNCHER}"
 

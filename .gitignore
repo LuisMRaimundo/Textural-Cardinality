@@ -7,7 +7,7 @@ __pycache__/
 # Generated package / install metadata (never edit; never treat as authoritative)
 *.egg-info/
 .eggs/
-**/textural_dimension.egg-info/
+**/textural_cardinality.egg-info/
 # MkDocs static site output (local docs server / build)
 site/
 
@@ -26,8 +26,8 @@ coverage.xml
 .gradio/
 
 # Windows distribution binaries
-Textural_dimension_install/*.exe
-Textural_dimension_install/portable/
+Textural_Cardinality_install/*.exe
+Textural_Cardinality_install/portable/
 
 # Optional: local env
 .env

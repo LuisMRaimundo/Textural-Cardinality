@@ -3,7 +3,7 @@ Symbolic vertical cardinality helpers.
 
 Counts notated pitch events, pitch units, and pitch classes for one vertical
 slice or summary row. Score-wide time series use event-boundary sampling in
-``textural_dimension.analysis``; see ``TECHNICAL_MANUAL.md`` §4.
+``textural_cardinality.analysis``; see ``TECHNICAL_MANUAL.md`` §4.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from textural_dimension.pitch_grid import (
+from textural_cardinality.pitch_grid import (
     NoteTuple,
     TUNING_PRESETS,
     _STEP_TO_SEMITONE,

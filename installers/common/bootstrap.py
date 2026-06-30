@@ -200,7 +200,7 @@ def launch_gradio(py: Path) -> int:
         pass
 
     code = (
-        "from textural_dimension.ui.gradio_app import build_demo\n"
+        "from textural_cardinality.ui.gradio_app import build_demo\n"
         f"build_demo().launch(server_name={GRADIO_HOST!r}, server_port={port}, inbrowser=False)\n"
     )
     return subprocess.call([str(py), "-c", code], cwd=PROJECT_ROOT, env=env)

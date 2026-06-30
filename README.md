@@ -2,7 +2,7 @@
 
 **Repository:** [github.com/LuisMRaimundo/Textural_Cardinality](https://github.com/LuisMRaimundo/Textural_Cardinality)  
 **Package version:** 1.1.0 (`pyproject.toml`, `CITATION.cff`)  
-**CI:** GitHub Actions — **244** tests on Python **3.10** and **3.11** (`python -m pytest tests -q`), with an **85%** coverage gate on `textural_dimension` and `iav` (local total coverage approximately **90.34%**). See [`.github/workflows/tests.yml`](.github/workflows/tests.yml).
+**CI:** GitHub Actions — **244** tests on Python **3.10** and **3.11** (`python -m pytest tests -q`), with an **85%** coverage gate on `textural_cardinality` and `iav` (local total coverage approximately **90.34%**). See [`.github/workflows/tests.yml`](.github/workflows/tests.yml).
 
 Cardinality-only symbolic toolkit with a graphical interface for score upload, analysis, and professional plotting.
 
@@ -51,14 +51,14 @@ pip install -e ".[dev]"
 ## Launch GUI
 
 ```bash
-python -m textural_dimension
+python -m textural_cardinality
 ```
 
 With **no CLI arguments**, this launches the Gradio interface (or double-click `run.bat` on Windows).
 
 ## CLI entry routing
 
-`python -m textural_dimension` has three modes:
+`python -m textural_cardinality` has three modes:
 
 | Invocation | Behaviour |
 |------------|-----------|
@@ -71,7 +71,7 @@ With **no CLI arguments**, this launches the Gradio interface (or double-click `
 Parses a `MusicXML`, `MXL`, or `MIDI` file through `analyze_vertical_cardinality` and writes the same CSV/JSON exports as the GUI. Does not launch Gradio.
 
 ```bash
-python -m textural_dimension analyze-score score.mxl \
+python -m textural_cardinality analyze-score score.mxl \
   --output-csv out.csv \
   --output-json out.json
 ```
@@ -98,7 +98,7 @@ On success, stdout prints `event_count`, `sample_count`, `max vertical_note_coun
 This mode does not parse a score file. It echoes cardinality fields from explicitly supplied summary-row values (`Notes`, `Unique pitches`, optional `PC cardinality`). The `--bin-cents`, `--edo`, `--tuning-preset`, and `--auto-detect-tuning` flags populate `_metadata.tuning` only; they do not recompute counts from a score.
 
 ```bash
-python -m textural_dimension --notes 4 --unique-pitches 3 --pc-cardinality 2 --edo 24
+python -m textural_cardinality --notes 4 --unique-pitches 3 --pc-cardinality 2 --edo 24
 ```
 
 Example output:
@@ -122,7 +122,7 @@ Example output:
 ## Programmatic API
 
 ```python
-from textural_dimension.analysis import analyze_vertical_cardinality
+from textural_cardinality.analysis import analyze_vertical_cardinality
 
 # Default: event boundaries + supplementary grid (time_step=0.25)
 result = analyze_vertical_cardinality("score.mxl")
@@ -165,7 +165,7 @@ Local verification (matches CI):
 
 ```bash
 python -m pytest tests -q
-python -m pytest tests -q --cov=textural_dimension --cov=iav --cov-report=term-missing --cov-fail-under=85
+python -m pytest tests -q --cov=textural_cardinality --cov=iav --cov-report=term-missing --cov-fail-under=85
 ```
 
 **244 tests** across **14** modules, including temporal-semantics contracts, EDO/export contracts, unpitched policy, Gradio smoke tests (import/build/delegation only — no server launch in CI), analytical-musicological plausibility checks (not perceptual validation), headless `analyze-score` CLI tests, a **micro-corpus regression fixture set** (`tests/fixtures/regression_corpus/`, 7 symbolic MusicXML scores with expected JSON snapshots), **shared pitch-grid primitive tests** (`tests/test_pitch_grid_shared_primitives.py`, 4 tests), and **iav/analysis pitch-primitive parity tests** (`tests/test_iav_analysis_pitch_parity.py`, 117 tests). Regression fixtures and parity tests are software-validation guards only; they are not a musical corpus claim and do not validate perception or acoustics.

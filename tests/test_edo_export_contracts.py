@@ -14,7 +14,7 @@ from music21.note import Note
 from music21.pitch import Pitch
 from music21.stream import Part, Score
 
-from textural_dimension.analysis import (
+from textural_cardinality.analysis import (
     TUNING_PRESETS,
     analyze_vertical_cardinality,
     detect_tuning_grid,
